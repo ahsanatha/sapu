@@ -1,0 +1,39 @@
+name: sapu-worker
+
+# Worker VM (VM-B in deploy/README.md)
+# Runs the puppeteer-heavy scraper. NO public ports. Only outbound HTTPS.
+# Talks to VM-A's Postgres/RabbitMQ/API via Hetzner private network.
+
+services:
+  worker:
+    build:
+      context: ..
+      dockerfile: Dockerfile.worker
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-sapu}:${POSTGRES_PASSWORD}@${CONTROL_PLANE_HOST}:5432/${POSTGRES_DB:-sapu}
+      RABBITMQ_URL: amqp://${RABBITMQ_USER:-sapu}:${RABBITMQ_PASSWORD}@${CONTROL_PLANE_HOST}:5672/${RABBITMQ_VHOST:-/sapu}
+      MONITOR_URL: http://${CONTROL_PLANE_HOST}:3000
+      QUEUE_PREFETCH: ${QUEUE_PREFETCH:-5}
+      PUPPETEER_DISABLE_SANDBOX: "1"
+      PUPPETEER_PROTOCOL_TIMEOUT_MS: "45000"
+      STEALTH_MODE: "true"
+      FILE_CONFIG_DIR: /app/config/sites
+      NODE_ENV: production
+      WORKER_ID: ${WORKER_ID:-worker-1}
+      HF_HOME: /home/node/.cache/huggingface
+    volumes:
+      - ./sites:/app/config/sites:ro
+      - hf-cache:/home/node/.cache/huggingface
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+
+volumes:
+  hf-cache:

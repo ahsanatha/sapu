@@ -1,0 +1,100 @@
+name: sapu-control-plane
+
+# Control plane VM (VM-A in deploy/README.md)
+# Runs Postgres + RabbitMQ + API + nginx (web admin + TLS termination)
+# All services bind to the private Hetzner network (10.0.0.0/16) except nginx which
+# binds public :80/:443.
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg15
+    restart: unless-stopped
+    expose:
+      - "5432"
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-sapu}
+      POSTGRES_USER: ${POSTGRES_USER:-sapu}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-sapu} -d ${POSTGRES_DB:-sapu}"]
+      interval: 5s
+      retries: 20
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    restart: unless-stopped
+    expose:
+      - "5672"
+      - "15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-sapu}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+      RABBITMQ_DEFAULT_VHOST: ${RABBITMQ_VHOST:-sapu}
+    volumes:
+      - rabbitdata:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      retries: 20
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  api:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    expose:
+      - "3000"
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-sapu}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-sapu}
+      RABBITMQ_URL: amqp://${RABBITMQ_USER:-sapu}:${RABBITMQ_PASSWORD}@rabbitmq:5672/${RABBITMQ_VHOST:-/sapu}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      VITE_ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      ADMIN_ACCESS_TOKEN: ${ADMIN_ACCESS_TOKEN}
+      PORT: "3000"
+      STEALTH_MODE: "true"
+      FILE_CONFIG_DIR: /app/config/sites
+      NODE_ENV: production
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY}
+      OPENROUTER_EMBEDDING_MODEL: ${OPENROUTER_EMBEDDING_MODEL:-openai/text-embedding-3-large}
+      OPENROUTER_REFERER: ${OPENROUTER_REFERER:-https://sapu.local}
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  nginx:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./certs:/etc/nginx/certs:ro
+      - ../web/dist:/usr/share/nginx/html:ro
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+
+volumes:
+  pgdata:
+  rabbitdata:

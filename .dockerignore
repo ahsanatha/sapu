@@ -7,3 +7,14 @@ dist
 *.log
 web/dist
 **/.cache
+
+# Deploy assets (bind-mounted at runtime, not COPYed into images)
+deploy/
+deploy/sites/
+deploy/certs/
+
+# Local env and tooling state
+.env*
+.opencode/
+.claude/
+.cursor/
