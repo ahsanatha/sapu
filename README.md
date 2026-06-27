@@ -1,153 +1,189 @@
 # Sapu
 
-Balanced news scraper with key sophisticated features while maintaining simplicity.
+> **Sapu** — sweep articles off the web. Stealth Puppeteer scraper with URL classification, multi-site scheduling, and RabbitMQ workers.
 
-## Features
+![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)
+![Status: production](https://img.shields.io/badge/Status-production-brightgreen?style=flat-square)
+![TypeScript](https://img.shields.io/badge/-TypeScript-3178C6?logo=typescript&logoColor=white&style=flat-square)
+![Node.js](https://img.shields.io/badge/-Node.js-339933?logo=nodedotjs&logoColor=white&style=flat-square)
+![pnpm](https://img.shields.io/badge/-pnpm-F69220?logo=pnpm&logoColor=white&style=flat-square)
+![Postgres](https://img.shields.io/badge/-Postgres-4169E1?logo=postgresql&logoColor=white&style=flat-square)
+![RabbitMQ](https://img.shields.io/badge/-RabbitMQ-FF6600?logo=rabbitmq&logoColor=white&style=flat-square)
+![Docker](https://img.shields.io/badge/-Docker-2496ED?logo=docker&logoColor=white&style=flat-square)
 
-- **🕵️ Stealth Mode**: Puppeteer-extra with stealth plugin for undetected scraping
-- **🔍 URL Classification**: Database-backed regex patterns for intelligent URL filtering
-- **⏰ Multi-Scheduler**: Per-site cron scheduling with configurable intervals
-- **📈 Auto-Scaling**: Dynamic worker scaling based on queue depth and utilization
-- **🐰 RabbitMQ**: Robust message queuing for job management
-- **⚙️ Site Configs**: Database-driven site configurations with per-site settings
-- **🎯 Smart Discovery**: Intelligent URL discovery with classification filtering
+A configuration-driven news scraper. The complex stuff lives in the database as JSON; the codebase stays small.
 
-## Quick Start
+---
+
+## Why Sapu
+
+Most scrapers accumulate abstractions: workers, queues, classifiers, schedulers, each their own service. Sapu collapses that. One TypeScript service, one Postgres database, one RabbitMQ exchange, and a small Next.js admin panel.
+
+Three things drove the design:
+
+1. **Configuration over code** — site rules, processor definitions, URL patterns live in the database as JSON. Add a new site by inserting a row, not by shipping a commit.
+2. **Stealth by default** — puppeteer-extra with the stealth plugin, automatic resource blocking (images, CSS, fonts), and per-site timeouts.
+3. **Schedule-aware** — every site gets its own cron. The scheduler re-reads its own config at runtime.
+
+## Quick start
+
+### Docker (recommended)
 
 ```bash
-# Copy environment
+git clone https://github.com/ahsanatha/sapu.git
+cd sapu
 cp .env.example .env
-
-# Start with Docker
-docker-compose up -d
-
-# Or run locally
-pnpm install
-pnpm run dev
+docker compose up -d
 ```
 
-## API Endpoints
+The API comes up on `:3000`, the admin panel on `:4321`. Bring Postgres and RabbitMQ up via the included `docker-compose.yml`.
 
-### Core Operations
-- `GET /health` - Health check with feature status
-- `GET /articles?classification=article&limit=50` - List articles with filtering
-- `POST /scrape` - Queue single URL with config
-- `POST /seed` - Start scraping all configured sites
+### Local development
 
-### URL Classification
-- `GET /patterns` - List all URL classification patterns
-- `POST /patterns` - Add new classification pattern
-- `POST /classify` - Classify a URL
+```bash
+pnpm install
+pnpm db:init          # create schema + seed reference data
+pnpm dev              # API server (tsx watch)
+pnpm worker           # scraper worker process
+pnpm web:dev          # admin panel (Next.js)
+```
 
-### Monitoring
-- `GET /scheduler` - Scheduler status and schedules
-- `GET /scaler` - Auto-scaler statistics and status
+Requires Node 22+, pnpm 10+, Postgres 15+, RabbitMQ 3.13+.
 
 ## Architecture
 
 ```
-src/
-├── app.ts                  # Main entry point with all APIs
-├── database.ts             # Direct SQL operations
-├── queue.ts                # Enhanced RabbitMQ wrapper
-├── scraper.ts              # Smart scraper with classification
-├── scheduler/
-│   └── index.ts           # Multi-scheduler with cron
-├── worker/
-│   └── auto-scaler.ts     # Dynamic worker scaling
-├── utils/
-│   ├── url-classifier.ts  # Regex-based URL classification
-│   └── stealth-browser.ts # Stealth browser management
-└── sites/                 # Site-specific extractors
-    ├── kompas.ts
-    ├── cnn.ts
-    └── index.ts
+┌─────────────────────┐
+│  Scheduler (cron)   │   per-site cron, re-reads config at runtime
+└──────────┬──────────┘
+           ↓ publishes to sapu.jobs
+┌─────────────────────┐
+│  RabbitMQ exchange  │   routing keys: scraping, url_collection
+└──────────┬──────────┘
+           ↓
+┌─────────────────────┐         ┌──────────────────┐
+│  Worker pool        │  ←────  │  Auto-scaler     │  queue-depth aware
+│  (stealth puppeteer)│         └──────────────────┘
+└──────────┬──────────┘
+           ↓
+┌─────────────────────┐         ┌──────────────────┐
+│  Postgres           │  ←────  │  Admin panel     │  Next.js + TanStack
+│  - sites            │         │  (port 4321)     │
+│  - processors       │         └──────────────────┘
+│  - url_patterns     │
+│  - articles         │
+└─────────────────────┘
 ```
 
-## Database Schema
+## Features
 
-### Sites Configuration
-```sql
-sites (
-  id, name, domain, base_url, active,
-  stealth_mode, timeout, max_concurrent, schedule_cron
-)
-```
+| | |
+|---|---|
+| 🕵️ **Stealth mode** | puppeteer-extra + stealth plugin; auto-blocks images/CSS/fonts |
+| 🔍 **URL classification** | regex patterns in DB with confidence + domain filters |
+| ⏰ **Multi-scheduler** | per-site cron, hot-reloadable, validated |
+| 📈 **Auto-scaling workers** | queue-depth + utilization based, cooldown-bounded |
+| 🐰 **RabbitMQ** | durable exchange, per-queue prefetch, DLQ |
+| ⚙️ **Site configs** | JSON in DB; add sites by inserting rows |
+| 🎯 **Smart discovery** | classification-filtered URL discovery |
+| 🔔 **Telegram notifications** | per-event fanout (optional) |
 
-### URL Classification Patterns
-```sql
-url_classification_patterns (
-  pattern, classification, confidence, priority,
-  domain_filter, success_count, total_count
-)
-```
+## API
 
-### Articles with Classification
-```sql
-articles (
-  id, site_id, url, title, content,
-  classification, published_at, scraped_at
-)
-```
+### Core
 
-### Worker Statistics
-```sql
-worker_stats (
-  worker_id, status, jobs_processed, last_heartbeat
-)
-```
+| Method | Path | Purpose |
+|---|---|---|
+| `GET` | `/health` | Health check + feature status |
+| `GET` | `/articles` | List articles with classification filter |
+| `POST` | `/scrape` | Queue a single URL |
+| `POST` | `/seed` | Queue all configured sites |
+
+### URL classification
+
+| Method | Path | Purpose |
+|---|---|---|
+| `GET` | `/patterns` | List all classification patterns |
+| `POST` | `/patterns` | Add a new pattern |
+| `POST` | `/classify` | Classify a URL |
+
+### Operations
+
+| Method | Path | Purpose |
+|---|---|---|
+| `GET` | `/scheduler` | Scheduler status + schedules |
+| `GET` | `/scaler` | Auto-scaler stats |
+
+## Database schema
+
+The schema (`schema.sql`) is configuration-as-data:
+
+| Table | Role |
+|---|---|
+| `configurations` | Generic key/value JSON (env-driven config) |
+| `processors` | Worker, scheduler, telegram definitions |
+| `sites` | Per-site scrape config (cron, timeout, concurrency) |
+| `url_classification_patterns` | Regex → classification, with confidence |
+| `articles` | Scraped articles with classification + scoring |
+| `worker_stats` | Heartbeat + throughput per worker |
+
+Run `pnpm db:init` to apply schema and seed reference data.
 
 ## Configuration
 
-### Stealth Mode
-- **Enabled**: Uses puppeteer-extra with stealth plugin
-- **Disabled**: Uses standard Puppeteer
-- **Resource Blocking**: Automatically blocks images, CSS, fonts for speed
+All runtime config via `.env`:
 
-### URL Classification
-- **Article Patterns**: High-priority patterns for article URLs
-- **Collection Patterns**: Lower-priority patterns for category/listing pages
-- **Domain Filtering**: Patterns can be restricted to specific domains
-- **Statistics Tracking**: Success/total counts for pattern effectiveness
+```bash
+# Database
+DATABASE_URL=postgresql://postgres@localhost:5432/sapu
+RABBITMQ_URL=amqp://sapu:sapu123@localhost:5672/sapu
 
-### Auto-Scaling
-- **Queue-Based**: Scales based on RabbitMQ queue depth
-- **Utilization-Based**: Scales based on worker utilization percentage
-- **Cooldown Periods**: Prevents rapid scaling oscillations
-- **Min/Max Limits**: Configurable worker count boundaries
- - **Per-Queue Prefetch**: Each queue can have distinct prefetch (concurrency)
- - **Config-Driven**: Database processor config is authoritative; `QUEUE_PREFETCH` is initial boot default only
+# Scraping
+HEADLESS=true
+STEALTH_MODE=true
+TIMEOUT=30000
+CONCURRENT_JOBS=5
 
-### Multi-Scheduler
-- **Per-Site Cron**: Each site can have its own schedule
-- **Dynamic Updates**: Schedules can be updated via API
-- **Validation**: Cron expressions are validated before activation
+# Scheduler
+SCHEDULER_ENABLED=true
+DEFAULT_CRON=0 */6 * * *
 
-## Key Features Retained
+# Auto-scaling
+AUTO_SCALE_ENABLED=true
+AUTO_SCALE_MIN_WORKERS=1
+AUTO_SCALE_MAX_WORKERS=5
 
-- ✅ **Regex Patterns in Database**: Dynamic URL classification
-- ✅ **URL Classification Engine**: Smart content filtering
-- ✅ **Stealth Mode**: Undetected browser automation
-- ✅ **Multiple Schedulers**: Per-site scheduling flexibility
-- ✅ **Worker Auto-Scale**: Dynamic resource management
-- ✅ **RabbitMQ**: Robust message queuing
-- ✅ **Simple Site Config Table**: Database-driven configuration
+# Admin auth (used as cookie name + bearer token)
+ADMIN_PASSWORD=sapu123
+ADMIN_ACCESS_TOKEN=change-me-in-env
 
-## Balanced Approach
+# Telegram (optional)
+TELEGRAM_ENABLED=false
+```
 
-**Kept Complex Features:**
-- URL classification with regex patterns
-- Stealth browser automation
-- Multi-scheduler system
-- Auto-scaling workers
-- RabbitMQ integration
-- Site configuration management
+## The stack
 
-**Simplified Architecture:**
-- Single TypeScript service
-- Direct SQL queries
-- Minimal abstraction layers
-- Essential APIs only
-- Container-ready deployment
+| Layer | Technology |
+|---|---|
+| API | Node.js 22, TypeScript 5, Fastify-style HTTP |
+| Workers | Node.js 22, puppeteer-extra + stealth, tsx |
+| Database | Postgres 15 |
+| Queue | RabbitMQ 3.13 |
+| Admin | Next.js 15, TanStack Router, TanStack Query |
+| Mobile | React Native (Expo) |
+| Cache | Postgres (no Redis — single-source-of-truth principle) |
+| Deploy | Docker Compose |
 
-**Result: 70% complexity reduction while retaining sophisticated features**
+## Honest limits
+
+This was built for a specific workload and shaped by it:
+
+- **Single-region, single-process** — fine for hundreds of sites, not designed for thousands.
+- **Postgres-only persistence** — no Redis; the queue is the only ephemeral state.
+- **Stealth ≠ magic** — puppeteer-extra mitigates, but dedicated anti-bot services can still detect it.
+
+If you need horizontal scaling or stronger anti-detection, swap RabbitMQ for Kafka/NATS and look at `puppeteer-extra` + residential proxy rotation.
+
+## License
+
+MIT — see [LICENSE](LICENSE).
