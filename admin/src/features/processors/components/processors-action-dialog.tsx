@@ -21,7 +21,7 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Textarea } from '@/components/ui/textarea'
-import { updateProcessor } from '@/lib/acq'
+import { updateProcessor } from '@/lib/sapu'
 import { type Processor } from '../data/schema'
 import { useProcessors } from './processors-provider'
 

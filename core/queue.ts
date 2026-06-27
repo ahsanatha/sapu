@@ -1,4 +1,4 @@
-// ACQ v3 Ultra-Simple Queue Interface
+// Sapu Queue Interface
 // Minimal RabbitMQ wrapper with real implementation
 // Target: ~100 lines total
 
@@ -37,8 +37,8 @@ class Queue {
   private connecting: boolean = false;
 
   constructor() {
-    // Default aligns with local RabbitMQ config from v2 (user: acq, pass: acq123, vhost: /acq)
-    this.url = process.env.RABBITMQ_URL || 'amqp://acq:acq123@172.17.0.2:5672/acq';
+    // Default aligns with local RabbitMQ config from v2 (user: sapu, pass: sapu123, vhost: /sapu)
+    this.url = process.env.RABBITMQ_URL || 'amqp://sapu:sapu123@172.17.0.2:5672/sapu';
     console.log('🐰 Queue URL:', this.url);
   }
 

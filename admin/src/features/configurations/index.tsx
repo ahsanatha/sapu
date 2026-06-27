@@ -6,14 +6,14 @@ import { Main } from '@/components/layout/main'
 import { ProfileDropdown } from '@/components/profile-dropdown'
 import { Search } from '@/components/search'
 import { ThemeSwitch } from '@/components/theme-switch'
-import { getConfigurations } from '@/lib/acq'
+import { getConfigurations } from '@/lib/sapu'
 import { ConfigurationsDialogs } from './components/configurations-dialogs'
 import { ConfigurationsPrimaryButtons } from './components/configurations-primary-buttons'
 import { ConfigurationsProvider } from './components/configurations-provider'
 import { ConfigurationsTable } from './components/configurations-table'
 import { type Configuration } from './data/schema'
 
-const route = getRouteApi('/_authenticated/acq/configurations')
+const route = getRouteApi('/_authenticated/sapu/configurations')
 
 export function Configurations() {
   const search = route.useSearch()

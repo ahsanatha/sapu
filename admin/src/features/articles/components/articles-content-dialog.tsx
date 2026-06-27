@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Button } from '@/components/ui/button'
-import { getArticle } from '@/lib/acq'
+import { getArticle } from '@/lib/sapu'
 import { useArticles } from './articles-provider'
 
 export function ArticlesContentDialog() {

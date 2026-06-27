@@ -1,6 +1,6 @@
 import { useArticles } from './articles-provider'
 import { ConfirmDialog } from '@/components/confirm-dialog'
-import { checkArticleExists } from '@/lib/acq'
+import { checkArticleExists } from '@/lib/sapu'
 import { useState } from 'react'
 import { ArticlesCreateDialog } from './articles-create-dialog'
 import { ArticlesContentDialog } from './articles-content-dialog'

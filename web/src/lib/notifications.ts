@@ -185,7 +185,7 @@ export class NotificationService {
     }
   }
 
-  // ACQ-specific notification methods
+  // Sapu-specific notification methods
   async notifyNewStory(
     storyTitle: string,
     category: string,
@@ -219,7 +219,7 @@ export class NotificationService {
 
   async notifyDailyDigest(storyCount: number): Promise<boolean> {
     return this.scheduleNotification({
-      title: "Your Daily ACQ Digest",
+      title: "Your Daily Sapu Digest",
       body: `${storyCount} new stories available today across your selected categories`,
       id: Date.now(),
       schedule: { at: new Date(Date.now() + 1000 * 60 * 60 * 24) }, // Tomorrow
@@ -263,7 +263,7 @@ export async function scheduleSaleNotification(): Promise<void> {
 // Initialize the service on module load (but don't block)
 notificationService.initialize().then((initialized) => {
   if (initialized) {
-    console.log("ACQ Notification Service ready");
+    console.log("Sapu Notification Service ready");
   }
 });
 

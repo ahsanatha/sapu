@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { AxiosError } from 'axios'
-import { acq } from '@/lib/acq'
+import { sapu } from '@/lib/sapu'
 import { Button } from '@/components/ui/button'
 
 type Props = { children?: React.ReactNode }
@@ -14,7 +14,7 @@ export function AdminAuthGuard({ children }: Props) {
     setLoading(true)
     setMessage('')
     try {
-      await acq.get('/api/status')
+      await sapu.get('/api/status')
       setOk(true)
     } catch (e) {
       const ax = e as AxiosError

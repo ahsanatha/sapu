@@ -2,7 +2,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { z } from 'zod'
 import { Articles } from '@/features/articles'
 
-export const Route = createFileRoute('/_authenticated/acq/articles')({
+export const Route = createFileRoute('/_authenticated/sapu/articles')({
   component: Articles,
   validateSearch: z.object({
     page: z.number().catch(1),

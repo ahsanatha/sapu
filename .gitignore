@@ -161,4 +161,4 @@ yarn.lock
 # Exclude benchmark results and historical data
 benchmark/
 historical-data/
-results/
+results/.trae/

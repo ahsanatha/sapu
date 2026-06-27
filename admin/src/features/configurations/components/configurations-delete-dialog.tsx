@@ -4,7 +4,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { ConfirmDialog } from '@/components/confirm-dialog'
-import { deleteConfiguration } from '@/lib/acq'
+import { deleteConfiguration } from '@/lib/sapu'
 import { type Configuration } from '../data/schema'
 import { useConfigurations } from './configurations-provider'
 

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { ConfirmDialog } from '@/components/confirm-dialog'
-import { createArticle } from '@/lib/acq'
+import { createArticle } from '@/lib/sapu'
 import { useArticles } from './articles-provider'
 import { toast } from 'sonner'
 

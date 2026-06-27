@@ -1,4 +1,4 @@
-// Centralized type definitions for ACQ v3 configuration
+// Centralized type definitions for Sapu configuration
 // Keep lean and aligned with entity-driven JSON stored in DB
 
 export type WaitUntil = 'load' | 'domcontentloaded' | 'networkidle0' | 'networkidle2';

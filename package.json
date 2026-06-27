@@ -1,7 +1,7 @@
 {
-  "name": "acq-v3",
+  "name": "sapu",
   "version": "3.0.0",
-  "description": "ACQ v3 - Ultra-Simple Configuration-Driven Architecture",
+  "description": "Sapu - Ultra-Simple Configuration-Driven Architecture",
   "main": "dist/apis/server.js",
   "type": "module",
   "engines": {

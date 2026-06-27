@@ -21,7 +21,7 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Textarea } from '@/components/ui/textarea'
-import { createConfiguration, updateConfiguration } from '@/lib/acq'
+import { createConfiguration, updateConfiguration } from '@/lib/sapu'
 import { type Configuration } from '../data/schema'
 import { useConfigurations } from './configurations-provider'
 

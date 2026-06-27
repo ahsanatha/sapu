@@ -6,13 +6,13 @@ import { Main } from '@/components/layout/main'
 import { ProfileDropdown } from '@/components/profile-dropdown'
 import { Search } from '@/components/search'
 import { ThemeSwitch } from '@/components/theme-switch'
-import { getWorkflows } from '@/lib/acq'
+import { getWorkflows } from '@/lib/sapu'
 import { WorkflowsDialogs } from './components/workflows-dialogs'
 import { WorkflowsProvider } from './components/workflows-provider'
 import { WorkflowsTable } from './components/workflows-table'
 import { type Workflow } from './data/schema'
 
-const route = getRouteApi('/_authenticated/acq/workflows')
+const route = getRouteApi('/_authenticated/sapu/workflows')
 
 export function Workflows() {
   const search = route.useSearch()

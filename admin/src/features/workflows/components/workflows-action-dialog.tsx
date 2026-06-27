@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from '@/components/ui/input'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Textarea } from '@/components/ui/textarea'
-import { updateWorkflow } from '@/lib/acq'
+import { updateWorkflow } from '@/lib/sapu'
 import { type Workflow } from '../data/schema'
 import { useWorkflows } from './workflows-provider'
 

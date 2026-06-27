@@ -7,7 +7,7 @@ export default function Footer() {
       <div className="max-w-6xl mx-auto px-6 py-10">
         <div className="grid md:grid-cols-3 gap-8 mb-8">
           <div>
-            <h3 className="text-blue-600 font-semibold mb-3">ACQ Alpha</h3>
+            <h3 className="text-blue-600 font-semibold mb-3">Sapu</h3>
             <p className="text-slate-700">
               AI-powered news aggregation dengan deteksi bias dan perspektif
               yang seimbang.
@@ -64,7 +64,7 @@ export default function Footer() {
           </div>
         </div>
         <div className="text-center text-sm text-slate-600 border-t border-slate-200 pt-6">
-          &copy; 2024 ACQ Alpha. All rights reserved.
+          &copy; 2024 Sapu Alpha. All rights reserved.
         </div>
       </div>
     </footer>

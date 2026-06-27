@@ -6,13 +6,13 @@ import { Main } from '@/components/layout/main'
 import { ProfileDropdown } from '@/components/profile-dropdown'
 import { Search } from '@/components/search'
 import { ThemeSwitch } from '@/components/theme-switch'
-import { maintenanceBackfillEmbeddings, maintenanceReindexEmbeddings } from '@/lib/acq'
+import { maintenanceBackfillEmbeddings, maintenanceReindexEmbeddings } from '@/lib/sapu'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { ConfirmDialog } from '@/components/confirm-dialog'
 
-const route = getRouteApi('/_authenticated/acq/maintenance')
+const route = getRouteApi('/_authenticated/sapu/maintenance')
 
 export function Maintenance() {
   route.useSearch()

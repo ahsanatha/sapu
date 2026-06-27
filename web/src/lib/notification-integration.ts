@@ -1,9 +1,9 @@
 import { notificationService } from "./notifications";
 
 /**
- * ACQ Notification Integration
+ * Sapu Notification Integration
  *
- * This module provides easy integration points for notifications throughout the ACQ app.
+ * This module provides easy integration points for notifications throughout the Sapu app.
  * Import and use these functions in your components to add notification capabilities.
  */
 
@@ -64,7 +64,7 @@ export async function notifyCollectionComplete(
   source: string,
 ): Promise<void> {
   const success = await notificationService.scheduleNotification({
-    title: "ACQ Collection Complete",
+    title: "Sapu Collection Complete",
     body: `Collected ${count} articles from ${source}`,
     id: Date.now(),
     extra: { type: "collection_complete", count, source },
@@ -83,7 +83,7 @@ export async function notifyScrapingError(
   error: string,
 ): Promise<void> {
   const success = await notificationService.scheduleNotification({
-    title: "ACQ Scraping Error",
+    title: "Sapu Scraping Error",
     body: `Failed to scrape ${source}: ${error}`,
     id: Date.now(),
     extra: { type: "scraping_error", source, error },
@@ -102,9 +102,9 @@ export async function notifySystemStatus(
   message: string,
 ): Promise<void> {
   const titles = {
-    healthy: "ACQ System Healthy",
-    warning: "ACQ System Warning",
-    error: "ACQ System Error",
+    healthy: "Sapu System Healthy",
+    warning: "Sapu System Warning",
+    error: "Sapu System Error",
   };
 
   const success = await notificationService.scheduleNotification({

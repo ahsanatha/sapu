@@ -1,8 +1,8 @@
-# ACQ v3 Ultra-Simple Rebuild Complete
+# Sapu Rebuild Complete
 
 ## 🎯 **Mission Accomplished: Configuration-Over-Code Architecture**
 
-Successfully rebuilt ACQ v3 from scratch following staff-level engineering principles with **"Configuration over Code"** philosophy.
+Successfully rebuilt Sapu from scratch following staff-level engineering principles with **"Configuration over Code"** philosophy.
 
 ## 📊 **Code Reduction Achievement**
 
@@ -185,7 +185,7 @@ WHERE key = 'autoscaling.enabled';
 
 ## 🎉 **Result: The Perfect Balance**
 
-ACQ v3 now embodies the ultimate staff-level engineering achievement:
+Sapu now embodies the ultimate staff-level engineering achievement:
 
 > **"Maximum functionality with minimum code through intelligent configuration design"**
 

@@ -1,4 +1,4 @@
-// ACQ v3 Ultra-Simple API Server
+// Sapu API Server
 // Basic CRUD endpoints for configuration management
 // Target: 100 lines
 
@@ -502,7 +502,7 @@ app.get('/api/events/stream', requireAdmin, async (req, res) => {
     const workflows = await db.getWorkflows(true);
     const workers = await getWorkersInfo();
     return {
-      system: 'ACQ v3 Ultra-Simple',
+      system: 'Sapu',
       timestamp: new Date().toISOString(),
       stats: {
         enabled_sites: sites.length,
@@ -705,7 +705,7 @@ app.get('/api/status', requireAdmin, async (req, res) => {
     })();
 
     res.json({
-      system: 'ACQ v3 Ultra-Simple',
+      system: 'Sapu',
       timestamp: new Date().toISOString(),
       stats: {
         enabled_sites: sites.length,

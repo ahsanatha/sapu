@@ -1,4 +1,4 @@
-// ACQ v3 Ultra-Simple Database Interface
+// Sapu Database Interface
 // Simple CRUD operations for entities
 // Target: 100 lines total
 
@@ -62,7 +62,7 @@ class Database {
 
   constructor() {
     this.pool = new pg.Pool({
-      connectionString: process.env.DATABASE_URL || 'postgresql://postgres@localhost:5432/acq_v3'
+      connectionString: process.env.DATABASE_URL || 'postgresql://postgres@localhost:5432/sapu'
     });
   }
 

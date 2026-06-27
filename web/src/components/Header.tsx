@@ -17,7 +17,7 @@ export default function Header() {
         <div className="flex items-center justify-between py-4">
           <div className="flex items-baseline gap-2">
             <h1 className="text-2xl font-extrabold bg-gradient-to-r from-blue-600 to-sky-400 bg-clip-text text-transparent">
-              ACQ
+              Sapu
             </h1>
             <span className="text-xs text-gray-400 font-semibold uppercase tracking-widest">
               Alpha

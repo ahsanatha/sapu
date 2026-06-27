@@ -1,4 +1,4 @@
--- ACQ v3 Ultra-Simple Schema
+-- Sapu Schema
 -- Philosophy: Configuration over Code
 -- All business logic lives in database as JSON configurations
 
@@ -82,11 +82,11 @@ INSERT INTO configurations (key, value, category, description) VALUES
 ('database.pool_size', '10', 'infrastructure', 'Database connection pool size'),
 
 -- RabbitMQ Configuration (from v2)
-('rabbitmq.url', '"amqp://acq:acq123@localhost:5672/acq"', 'infrastructure', 'RabbitMQ connection URL'),
-('rabbitmq.exchange', '"acq.jobs"', 'infrastructure', 'Main exchange for job routing'),
-('rabbitmq.queues.scraping', '"acq.jobs.scraping"', 'infrastructure', 'Scraping jobs queue'),
-('rabbitmq.queues.url_collection', '"acq.jobs.url_collection"', 'infrastructure', 'URL collection jobs queue'),
-('rabbitmq.queues.dlq', '"acq.jobs.dlq"', 'infrastructure', 'Dead letter queue for failed jobs'),
+('rabbitmq.url', '"amqp://sapu:sapu123@localhost:5672/sapu"', 'infrastructure', 'RabbitMQ connection URL'),
+('rabbitmq.exchange', '"sapu.jobs"', 'infrastructure', 'Main exchange for job routing'),
+('rabbitmq.queues.scraping', '"sapu.jobs.scraping"', 'infrastructure', 'Scraping jobs queue'),
+('rabbitmq.queues.url_collection', '"sapu.jobs.url_collection"', 'infrastructure', 'URL collection jobs queue'),
+('rabbitmq.queues.dlq', '"sapu.jobs.dlq"', 'infrastructure', 'Dead letter queue for failed jobs'),
 ('rabbitmq.message_ttl', '3600000', 'infrastructure', 'Message TTL in milliseconds (1 hour)'),
 ('rabbitmq.max_priority', '10', 'infrastructure', 'Maximum message priority'),
 

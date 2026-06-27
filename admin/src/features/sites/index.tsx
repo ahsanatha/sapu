@@ -6,13 +6,13 @@ import { Main } from '@/components/layout/main'
 import { ProfileDropdown } from '@/components/profile-dropdown'
 import { Search } from '@/components/search'
 import { ThemeSwitch } from '@/components/theme-switch'
-import { getSites } from '@/lib/acq'
+import { getSites } from '@/lib/sapu'
 import { SitesDialogs } from './components/sites-dialogs'
 import { SitesProvider } from './components/sites-provider'
 import { SitesTable } from './components/sites-table'
 import { type Site } from './data/schema'
 
-const route = getRouteApi('/_authenticated/acq/sites')
+const route = getRouteApi('/_authenticated/sapu/sites')
 
 export function Sites() {
   const search = route.useSearch()

@@ -1,4 +1,4 @@
-// ACQ v3 Ultra-Simple Engine
+// Sapu Engine
 // Single main process that reads DB config and executes workflows
 // Target: 150 lines total
 
@@ -41,7 +41,7 @@ class Engine {
   private stopped = false;
 
   async start(): Promise<void> {
-    console.log('🚀 Starting ACQ v3 Ultra-Simple Engine...');
+    console.log('🚀 Starting Sapu Engine...');
     
     // Connect to infrastructure
     await db.connect();

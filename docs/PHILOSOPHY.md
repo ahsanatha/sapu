@@ -1,5 +1,5 @@
 # Configuration-Over-Code Philosophy
-## ACQ v3 Ultra-Simple Design
+## Sapu Design
 
 > *"Every line of code costs money. Every configuration saves money."*
 

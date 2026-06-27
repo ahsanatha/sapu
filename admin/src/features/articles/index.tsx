@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { getRouteApi } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
-import { getArticles } from '@/lib/acq'
+import { getArticles } from '@/lib/sapu'
 import { toast } from 'sonner'
 import { ArticlesProvider, useArticles } from './components/articles-provider'
 import { ArticlesDialogs } from './components/articles-dialogs'
@@ -14,7 +14,7 @@ import { ProfileDropdown } from '@/components/profile-dropdown'
 import { Search } from '@/components/search'
 import { ThemeSwitch } from '@/components/theme-switch'
 
-const route = getRouteApi('/_authenticated/acq/articles')
+const route = getRouteApi('/_authenticated/sapu/articles')
 
 function ArticlesContent({ items, onReload }: { items: Article[]; onReload: () => Promise<void> }) {
   const { setOpen } = useArticles()

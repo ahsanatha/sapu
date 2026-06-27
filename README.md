@@ -1,4 +1,4 @@
-# ACQ v3
+# Sapu
 
 Balanced news scraper with key sophisticated features while maintaining simplicity.
 

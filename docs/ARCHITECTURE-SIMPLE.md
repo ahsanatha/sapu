@@ -1,4 +1,4 @@
-# ACQ v3 Ultra-Simple Architecture
+# Sapu Architecture
 
 ## 🎯 Goal: 500 Lines of Code Total (Down from 2000+)
 

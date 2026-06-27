@@ -25,14 +25,14 @@ import { Route as authForgotPasswordRouteImport } from './routes/(auth)/forgot-p
 import { Route as ClerkAuthenticatedRouteRouteImport } from './routes/clerk/_authenticated/route'
 import { Route as ClerkauthRouteRouteImport } from './routes/clerk/(auth)/route'
 import { Route as AuthenticatedSettingsRouteRouteImport } from './routes/_authenticated/settings/route'
-import { Route as AuthenticatedAcqRouteRouteImport } from './routes/_authenticated/acq/route'
+import { Route as AuthenticatedSapuRouteRouteImport } from './routes/_authenticated/sapu/route'
 import { Route as AuthenticatedUsersIndexRouteImport } from './routes/_authenticated/users/index'
 import { Route as AuthenticatedTasksIndexRouteImport } from './routes/_authenticated/tasks/index'
 import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings/index'
 import { Route as AuthenticatedHelpCenterIndexRouteImport } from './routes/_authenticated/help-center/index'
 import { Route as AuthenticatedChatsIndexRouteImport } from './routes/_authenticated/chats/index'
 import { Route as AuthenticatedAppsIndexRouteImport } from './routes/_authenticated/apps/index'
-import { Route as AuthenticatedAcqIndexRouteImport } from './routes/_authenticated/acq/index'
+import { Route as AuthenticatedSapuIndexRouteImport } from './routes/_authenticated/sapu/index'
 import { Route as ClerkAuthenticatedUserManagementRouteImport } from './routes/clerk/_authenticated/user-management'
 import { Route as ClerkauthSignUpRouteImport } from './routes/clerk/(auth)/sign-up'
 import { Route as ClerkauthSignInRouteImport } from './routes/clerk/(auth)/sign-in'
@@ -41,14 +41,14 @@ import { Route as AuthenticatedSettingsDisplayRouteImport } from './routes/_auth
 import { Route as AuthenticatedSettingsAppearanceRouteImport } from './routes/_authenticated/settings/appearance'
 import { Route as AuthenticatedSettingsAccountRouteImport } from './routes/_authenticated/settings/account'
 import { Route as AuthenticatedErrorsErrorRouteImport } from './routes/_authenticated/errors/$error'
-import { Route as AuthenticatedAcqWorkflowsRouteImport } from './routes/_authenticated/acq/workflows'
-import { Route as AuthenticatedAcqWorkersRouteImport } from './routes/_authenticated/acq/workers'
-import { Route as AuthenticatedAcqSitesRouteImport } from './routes/_authenticated/acq/sites'
-import { Route as AuthenticatedAcqScrapeRouteImport } from './routes/_authenticated/acq/scrape'
-import { Route as AuthenticatedAcqProcessorsRouteImport } from './routes/_authenticated/acq/processors'
-import { Route as AuthenticatedAcqMaintenanceRouteImport } from './routes/_authenticated/acq/maintenance'
-import { Route as AuthenticatedAcqConfigurationsRouteImport } from './routes/_authenticated/acq/configurations'
-import { Route as AuthenticatedAcqArticlesRouteImport } from './routes/_authenticated/acq/articles'
+import { Route as AuthenticatedSapuWorkflowsRouteImport } from './routes/_authenticated/sapu/workflows'
+import { Route as AuthenticatedSapuWorkersRouteImport } from './routes/_authenticated/sapu/workers'
+import { Route as AuthenticatedSapuSitesRouteImport } from './routes/_authenticated/sapu/sites'
+import { Route as AuthenticatedSapuScrapeRouteImport } from './routes/_authenticated/sapu/scrape'
+import { Route as AuthenticatedSapuProcessorsRouteImport } from './routes/_authenticated/sapu/processors'
+import { Route as AuthenticatedSapuMaintenanceRouteImport } from './routes/_authenticated/sapu/maintenance'
+import { Route as AuthenticatedSapuConfigurationsRouteImport } from './routes/_authenticated/sapu/configurations'
+import { Route as AuthenticatedSapuArticlesRouteImport } from './routes/_authenticated/sapu/articles'
 
 const ClerkRouteRoute = ClerkRouteRouteImport.update({
   id: '/clerk',
@@ -128,9 +128,9 @@ const AuthenticatedSettingsRouteRoute =
     path: '/settings',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedAcqRouteRoute = AuthenticatedAcqRouteRouteImport.update({
-  id: '/acq',
-  path: '/acq',
+const AuthenticatedSapuRouteRoute = AuthenticatedSapuRouteRouteImport.update({
+  id: '/sapu',
+  path: '/sapu',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedUsersIndexRoute = AuthenticatedUsersIndexRouteImport.update({
@@ -165,10 +165,10 @@ const AuthenticatedAppsIndexRoute = AuthenticatedAppsIndexRouteImport.update({
   path: '/apps/',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedAcqIndexRoute = AuthenticatedAcqIndexRouteImport.update({
+const AuthenticatedSapuIndexRoute = AuthenticatedSapuIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => AuthenticatedAcqRouteRoute,
+  getParentRoute: () => AuthenticatedSapuRouteRoute,
 } as any)
 const ClerkAuthenticatedUserManagementRoute =
   ClerkAuthenticatedUserManagementRouteImport.update({
@@ -216,55 +216,55 @@ const AuthenticatedErrorsErrorRoute =
     path: '/errors/$error',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedAcqWorkflowsRoute =
-  AuthenticatedAcqWorkflowsRouteImport.update({
+const AuthenticatedSapuWorkflowsRoute =
+  AuthenticatedSapuWorkflowsRouteImport.update({
     id: '/workflows',
     path: '/workflows',
-    getParentRoute: () => AuthenticatedAcqRouteRoute,
+    getParentRoute: () => AuthenticatedSapuRouteRoute,
   } as any)
-const AuthenticatedAcqWorkersRoute = AuthenticatedAcqWorkersRouteImport.update({
+const AuthenticatedSapuWorkersRoute = AuthenticatedSapuWorkersRouteImport.update({
   id: '/workers',
   path: '/workers',
-  getParentRoute: () => AuthenticatedAcqRouteRoute,
+  getParentRoute: () => AuthenticatedSapuRouteRoute,
 } as any)
-const AuthenticatedAcqSitesRoute = AuthenticatedAcqSitesRouteImport.update({
+const AuthenticatedSapuSitesRoute = AuthenticatedSapuSitesRouteImport.update({
   id: '/sites',
   path: '/sites',
-  getParentRoute: () => AuthenticatedAcqRouteRoute,
+  getParentRoute: () => AuthenticatedSapuRouteRoute,
 } as any)
-const AuthenticatedAcqScrapeRoute = AuthenticatedAcqScrapeRouteImport.update({
+const AuthenticatedSapuScrapeRoute = AuthenticatedSapuScrapeRouteImport.update({
   id: '/scrape',
   path: '/scrape',
-  getParentRoute: () => AuthenticatedAcqRouteRoute,
+  getParentRoute: () => AuthenticatedSapuRouteRoute,
 } as any)
-const AuthenticatedAcqProcessorsRoute =
-  AuthenticatedAcqProcessorsRouteImport.update({
+const AuthenticatedSapuProcessorsRoute =
+  AuthenticatedSapuProcessorsRouteImport.update({
     id: '/processors',
     path: '/processors',
-    getParentRoute: () => AuthenticatedAcqRouteRoute,
+    getParentRoute: () => AuthenticatedSapuRouteRoute,
   } as any)
-const AuthenticatedAcqMaintenanceRoute =
-  AuthenticatedAcqMaintenanceRouteImport.update({
+const AuthenticatedSapuMaintenanceRoute =
+  AuthenticatedSapuMaintenanceRouteImport.update({
     id: '/maintenance',
     path: '/maintenance',
-    getParentRoute: () => AuthenticatedAcqRouteRoute,
+    getParentRoute: () => AuthenticatedSapuRouteRoute,
   } as any)
-const AuthenticatedAcqConfigurationsRoute =
-  AuthenticatedAcqConfigurationsRouteImport.update({
+const AuthenticatedSapuConfigurationsRoute =
+  AuthenticatedSapuConfigurationsRouteImport.update({
     id: '/configurations',
     path: '/configurations',
-    getParentRoute: () => AuthenticatedAcqRouteRoute,
+    getParentRoute: () => AuthenticatedSapuRouteRoute,
   } as any)
-const AuthenticatedAcqArticlesRoute =
-  AuthenticatedAcqArticlesRouteImport.update({
+const AuthenticatedSapuArticlesRoute =
+  AuthenticatedSapuArticlesRouteImport.update({
     id: '/articles',
     path: '/articles',
-    getParentRoute: () => AuthenticatedAcqRouteRoute,
+    getParentRoute: () => AuthenticatedSapuRouteRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
   '/clerk': typeof ClerkAuthenticatedRouteRouteWithChildren
-  '/acq': typeof AuthenticatedAcqRouteRouteWithChildren
+  '/sapu': typeof AuthenticatedSapuRouteRouteWithChildren
   '/settings': typeof AuthenticatedSettingsRouteRouteWithChildren
   '/forgot-password': typeof authForgotPasswordRoute
   '/otp': typeof authOtpRoute
@@ -277,14 +277,14 @@ export interface FileRoutesByFullPath {
   '/500': typeof errors500Route
   '/503': typeof errors503Route
   '/': typeof AuthenticatedIndexRoute
-  '/acq/articles': typeof AuthenticatedAcqArticlesRoute
-  '/acq/configurations': typeof AuthenticatedAcqConfigurationsRoute
-  '/acq/maintenance': typeof AuthenticatedAcqMaintenanceRoute
-  '/acq/processors': typeof AuthenticatedAcqProcessorsRoute
-  '/acq/scrape': typeof AuthenticatedAcqScrapeRoute
-  '/acq/sites': typeof AuthenticatedAcqSitesRoute
-  '/acq/workers': typeof AuthenticatedAcqWorkersRoute
-  '/acq/workflows': typeof AuthenticatedAcqWorkflowsRoute
+  '/sapu/articles': typeof AuthenticatedSapuArticlesRoute
+  '/sapu/configurations': typeof AuthenticatedSapuConfigurationsRoute
+  '/sapu/maintenance': typeof AuthenticatedSapuMaintenanceRoute
+  '/sapu/processors': typeof AuthenticatedSapuProcessorsRoute
+  '/sapu/scrape': typeof AuthenticatedSapuScrapeRoute
+  '/sapu/sites': typeof AuthenticatedSapuSitesRoute
+  '/sapu/workers': typeof AuthenticatedSapuWorkersRoute
+  '/sapu/workflows': typeof AuthenticatedSapuWorkflowsRoute
   '/errors/$error': typeof AuthenticatedErrorsErrorRoute
   '/settings/account': typeof AuthenticatedSettingsAccountRoute
   '/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
@@ -293,7 +293,7 @@ export interface FileRoutesByFullPath {
   '/clerk/sign-in': typeof ClerkauthSignInRoute
   '/clerk/sign-up': typeof ClerkauthSignUpRoute
   '/clerk/user-management': typeof ClerkAuthenticatedUserManagementRoute
-  '/acq/': typeof AuthenticatedAcqIndexRoute
+  '/sapu/': typeof AuthenticatedSapuIndexRoute
   '/apps': typeof AuthenticatedAppsIndexRoute
   '/chats': typeof AuthenticatedChatsIndexRoute
   '/help-center': typeof AuthenticatedHelpCenterIndexRoute
@@ -314,14 +314,14 @@ export interface FileRoutesByTo {
   '/500': typeof errors500Route
   '/503': typeof errors503Route
   '/': typeof AuthenticatedIndexRoute
-  '/acq/articles': typeof AuthenticatedAcqArticlesRoute
-  '/acq/configurations': typeof AuthenticatedAcqConfigurationsRoute
-  '/acq/maintenance': typeof AuthenticatedAcqMaintenanceRoute
-  '/acq/processors': typeof AuthenticatedAcqProcessorsRoute
-  '/acq/scrape': typeof AuthenticatedAcqScrapeRoute
-  '/acq/sites': typeof AuthenticatedAcqSitesRoute
-  '/acq/workers': typeof AuthenticatedAcqWorkersRoute
-  '/acq/workflows': typeof AuthenticatedAcqWorkflowsRoute
+  '/sapu/articles': typeof AuthenticatedSapuArticlesRoute
+  '/sapu/configurations': typeof AuthenticatedSapuConfigurationsRoute
+  '/sapu/maintenance': typeof AuthenticatedSapuMaintenanceRoute
+  '/sapu/processors': typeof AuthenticatedSapuProcessorsRoute
+  '/sapu/scrape': typeof AuthenticatedSapuScrapeRoute
+  '/sapu/sites': typeof AuthenticatedSapuSitesRoute
+  '/sapu/workers': typeof AuthenticatedSapuWorkersRoute
+  '/sapu/workflows': typeof AuthenticatedSapuWorkflowsRoute
   '/errors/$error': typeof AuthenticatedErrorsErrorRoute
   '/settings/account': typeof AuthenticatedSettingsAccountRoute
   '/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
@@ -330,7 +330,7 @@ export interface FileRoutesByTo {
   '/clerk/sign-in': typeof ClerkauthSignInRoute
   '/clerk/sign-up': typeof ClerkauthSignUpRoute
   '/clerk/user-management': typeof ClerkAuthenticatedUserManagementRoute
-  '/acq': typeof AuthenticatedAcqIndexRoute
+  '/sapu': typeof AuthenticatedSapuIndexRoute
   '/apps': typeof AuthenticatedAppsIndexRoute
   '/chats': typeof AuthenticatedChatsIndexRoute
   '/help-center': typeof AuthenticatedHelpCenterIndexRoute
@@ -342,7 +342,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/clerk': typeof ClerkRouteRouteWithChildren
-  '/_authenticated/acq': typeof AuthenticatedAcqRouteRouteWithChildren
+  '/_authenticated/sapu': typeof AuthenticatedSapuRouteRouteWithChildren
   '/_authenticated/settings': typeof AuthenticatedSettingsRouteRouteWithChildren
   '/clerk/(auth)': typeof ClerkauthRouteRouteWithChildren
   '/clerk/_authenticated': typeof ClerkAuthenticatedRouteRouteWithChildren
@@ -357,14 +357,14 @@ export interface FileRoutesById {
   '/(errors)/500': typeof errors500Route
   '/(errors)/503': typeof errors503Route
   '/_authenticated/': typeof AuthenticatedIndexRoute
-  '/_authenticated/acq/articles': typeof AuthenticatedAcqArticlesRoute
-  '/_authenticated/acq/configurations': typeof AuthenticatedAcqConfigurationsRoute
-  '/_authenticated/acq/maintenance': typeof AuthenticatedAcqMaintenanceRoute
-  '/_authenticated/acq/processors': typeof AuthenticatedAcqProcessorsRoute
-  '/_authenticated/acq/scrape': typeof AuthenticatedAcqScrapeRoute
-  '/_authenticated/acq/sites': typeof AuthenticatedAcqSitesRoute
-  '/_authenticated/acq/workers': typeof AuthenticatedAcqWorkersRoute
-  '/_authenticated/acq/workflows': typeof AuthenticatedAcqWorkflowsRoute
+  '/_authenticated/sapu/articles': typeof AuthenticatedSapuArticlesRoute
+  '/_authenticated/sapu/configurations': typeof AuthenticatedSapuConfigurationsRoute
+  '/_authenticated/sapu/maintenance': typeof AuthenticatedSapuMaintenanceRoute
+  '/_authenticated/sapu/processors': typeof AuthenticatedSapuProcessorsRoute
+  '/_authenticated/sapu/scrape': typeof AuthenticatedSapuScrapeRoute
+  '/_authenticated/sapu/sites': typeof AuthenticatedSapuSitesRoute
+  '/_authenticated/sapu/workers': typeof AuthenticatedSapuWorkersRoute
+  '/_authenticated/sapu/workflows': typeof AuthenticatedSapuWorkflowsRoute
   '/_authenticated/errors/$error': typeof AuthenticatedErrorsErrorRoute
   '/_authenticated/settings/account': typeof AuthenticatedSettingsAccountRoute
   '/_authenticated/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
@@ -373,7 +373,7 @@ export interface FileRoutesById {
   '/clerk/(auth)/sign-in': typeof ClerkauthSignInRoute
   '/clerk/(auth)/sign-up': typeof ClerkauthSignUpRoute
   '/clerk/_authenticated/user-management': typeof ClerkAuthenticatedUserManagementRoute
-  '/_authenticated/acq/': typeof AuthenticatedAcqIndexRoute
+  '/_authenticated/sapu/': typeof AuthenticatedSapuIndexRoute
   '/_authenticated/apps/': typeof AuthenticatedAppsIndexRoute
   '/_authenticated/chats/': typeof AuthenticatedChatsIndexRoute
   '/_authenticated/help-center/': typeof AuthenticatedHelpCenterIndexRoute
@@ -385,7 +385,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/clerk'
-    | '/acq'
+    | '/sapu'
     | '/settings'
     | '/forgot-password'
     | '/otp'
@@ -398,14 +398,14 @@ export interface FileRouteTypes {
     | '/500'
     | '/503'
     | '/'
-    | '/acq/articles'
-    | '/acq/configurations'
-    | '/acq/maintenance'
-    | '/acq/processors'
-    | '/acq/scrape'
-    | '/acq/sites'
-    | '/acq/workers'
-    | '/acq/workflows'
+    | '/sapu/articles'
+    | '/sapu/configurations'
+    | '/sapu/maintenance'
+    | '/sapu/processors'
+    | '/sapu/scrape'
+    | '/sapu/sites'
+    | '/sapu/workers'
+    | '/sapu/workflows'
     | '/errors/$error'
     | '/settings/account'
     | '/settings/appearance'
@@ -414,7 +414,7 @@ export interface FileRouteTypes {
     | '/clerk/sign-in'
     | '/clerk/sign-up'
     | '/clerk/user-management'
-    | '/acq/'
+    | '/sapu/'
     | '/apps'
     | '/chats'
     | '/help-center'
@@ -435,14 +435,14 @@ export interface FileRouteTypes {
     | '/500'
     | '/503'
     | '/'
-    | '/acq/articles'
-    | '/acq/configurations'
-    | '/acq/maintenance'
-    | '/acq/processors'
-    | '/acq/scrape'
-    | '/acq/sites'
-    | '/acq/workers'
-    | '/acq/workflows'
+    | '/sapu/articles'
+    | '/sapu/configurations'
+    | '/sapu/maintenance'
+    | '/sapu/processors'
+    | '/sapu/scrape'
+    | '/sapu/sites'
+    | '/sapu/workers'
+    | '/sapu/workflows'
     | '/errors/$error'
     | '/settings/account'
     | '/settings/appearance'
@@ -451,7 +451,7 @@ export interface FileRouteTypes {
     | '/clerk/sign-in'
     | '/clerk/sign-up'
     | '/clerk/user-management'
-    | '/acq'
+    | '/sapu'
     | '/apps'
     | '/chats'
     | '/help-center'
@@ -462,7 +462,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/_authenticated'
     | '/clerk'
-    | '/_authenticated/acq'
+    | '/_authenticated/sapu'
     | '/_authenticated/settings'
     | '/clerk/(auth)'
     | '/clerk/_authenticated'
@@ -477,14 +477,14 @@ export interface FileRouteTypes {
     | '/(errors)/500'
     | '/(errors)/503'
     | '/_authenticated/'
-    | '/_authenticated/acq/articles'
-    | '/_authenticated/acq/configurations'
-    | '/_authenticated/acq/maintenance'
-    | '/_authenticated/acq/processors'
-    | '/_authenticated/acq/scrape'
-    | '/_authenticated/acq/sites'
-    | '/_authenticated/acq/workers'
-    | '/_authenticated/acq/workflows'
+    | '/_authenticated/sapu/articles'
+    | '/_authenticated/sapu/configurations'
+    | '/_authenticated/sapu/maintenance'
+    | '/_authenticated/sapu/processors'
+    | '/_authenticated/sapu/scrape'
+    | '/_authenticated/sapu/sites'
+    | '/_authenticated/sapu/workers'
+    | '/_authenticated/sapu/workflows'
     | '/_authenticated/errors/$error'
     | '/_authenticated/settings/account'
     | '/_authenticated/settings/appearance'
@@ -493,7 +493,7 @@ export interface FileRouteTypes {
     | '/clerk/(auth)/sign-in'
     | '/clerk/(auth)/sign-up'
     | '/clerk/_authenticated/user-management'
-    | '/_authenticated/acq/'
+    | '/_authenticated/sapu/'
     | '/_authenticated/apps/'
     | '/_authenticated/chats/'
     | '/_authenticated/help-center/'
@@ -631,11 +631,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsRouteRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/acq': {
-      id: '/_authenticated/acq'
-      path: '/acq'
-      fullPath: '/acq'
-      preLoaderRoute: typeof AuthenticatedAcqRouteRouteImport
+    '/_authenticated/sapu': {
+      id: '/_authenticated/sapu'
+      path: '/sapu'
+      fullPath: '/sapu'
+      preLoaderRoute: typeof AuthenticatedSapuRouteRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/users/': {
@@ -680,12 +680,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppsIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/acq/': {
-      id: '/_authenticated/acq/'
+    '/_authenticated/sapu/': {
+      id: '/_authenticated/sapu/'
       path: '/'
-      fullPath: '/acq/'
-      preLoaderRoute: typeof AuthenticatedAcqIndexRouteImport
-      parentRoute: typeof AuthenticatedAcqRouteRoute
+      fullPath: '/sapu/'
+      preLoaderRoute: typeof AuthenticatedSapuIndexRouteImport
+      parentRoute: typeof AuthenticatedSapuRouteRoute
     }
     '/clerk/_authenticated/user-management': {
       id: '/clerk/_authenticated/user-management'
@@ -743,92 +743,92 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedErrorsErrorRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/acq/workflows': {
-      id: '/_authenticated/acq/workflows'
+    '/_authenticated/sapu/workflows': {
+      id: '/_authenticated/sapu/workflows'
       path: '/workflows'
-      fullPath: '/acq/workflows'
-      preLoaderRoute: typeof AuthenticatedAcqWorkflowsRouteImport
-      parentRoute: typeof AuthenticatedAcqRouteRoute
+      fullPath: '/sapu/workflows'
+      preLoaderRoute: typeof AuthenticatedSapuWorkflowsRouteImport
+      parentRoute: typeof AuthenticatedSapuRouteRoute
     }
-    '/_authenticated/acq/workers': {
-      id: '/_authenticated/acq/workers'
+    '/_authenticated/sapu/workers': {
+      id: '/_authenticated/sapu/workers'
       path: '/workers'
-      fullPath: '/acq/workers'
-      preLoaderRoute: typeof AuthenticatedAcqWorkersRouteImport
-      parentRoute: typeof AuthenticatedAcqRouteRoute
+      fullPath: '/sapu/workers'
+      preLoaderRoute: typeof AuthenticatedSapuWorkersRouteImport
+      parentRoute: typeof AuthenticatedSapuRouteRoute
     }
-    '/_authenticated/acq/sites': {
-      id: '/_authenticated/acq/sites'
+    '/_authenticated/sapu/sites': {
+      id: '/_authenticated/sapu/sites'
       path: '/sites'
-      fullPath: '/acq/sites'
-      preLoaderRoute: typeof AuthenticatedAcqSitesRouteImport
-      parentRoute: typeof AuthenticatedAcqRouteRoute
+      fullPath: '/sapu/sites'
+      preLoaderRoute: typeof AuthenticatedSapuSitesRouteImport
+      parentRoute: typeof AuthenticatedSapuRouteRoute
     }
-    '/_authenticated/acq/scrape': {
-      id: '/_authenticated/acq/scrape'
+    '/_authenticated/sapu/scrape': {
+      id: '/_authenticated/sapu/scrape'
       path: '/scrape'
-      fullPath: '/acq/scrape'
-      preLoaderRoute: typeof AuthenticatedAcqScrapeRouteImport
-      parentRoute: typeof AuthenticatedAcqRouteRoute
+      fullPath: '/sapu/scrape'
+      preLoaderRoute: typeof AuthenticatedSapuScrapeRouteImport
+      parentRoute: typeof AuthenticatedSapuRouteRoute
     }
-    '/_authenticated/acq/processors': {
-      id: '/_authenticated/acq/processors'
+    '/_authenticated/sapu/processors': {
+      id: '/_authenticated/sapu/processors'
       path: '/processors'
-      fullPath: '/acq/processors'
-      preLoaderRoute: typeof AuthenticatedAcqProcessorsRouteImport
-      parentRoute: typeof AuthenticatedAcqRouteRoute
+      fullPath: '/sapu/processors'
+      preLoaderRoute: typeof AuthenticatedSapuProcessorsRouteImport
+      parentRoute: typeof AuthenticatedSapuRouteRoute
     }
-    '/_authenticated/acq/maintenance': {
-      id: '/_authenticated/acq/maintenance'
+    '/_authenticated/sapu/maintenance': {
+      id: '/_authenticated/sapu/maintenance'
       path: '/maintenance'
-      fullPath: '/acq/maintenance'
-      preLoaderRoute: typeof AuthenticatedAcqMaintenanceRouteImport
-      parentRoute: typeof AuthenticatedAcqRouteRoute
+      fullPath: '/sapu/maintenance'
+      preLoaderRoute: typeof AuthenticatedSapuMaintenanceRouteImport
+      parentRoute: typeof AuthenticatedSapuRouteRoute
     }
-    '/_authenticated/acq/configurations': {
-      id: '/_authenticated/acq/configurations'
+    '/_authenticated/sapu/configurations': {
+      id: '/_authenticated/sapu/configurations'
       path: '/configurations'
-      fullPath: '/acq/configurations'
-      preLoaderRoute: typeof AuthenticatedAcqConfigurationsRouteImport
-      parentRoute: typeof AuthenticatedAcqRouteRoute
+      fullPath: '/sapu/configurations'
+      preLoaderRoute: typeof AuthenticatedSapuConfigurationsRouteImport
+      parentRoute: typeof AuthenticatedSapuRouteRoute
     }
-    '/_authenticated/acq/articles': {
-      id: '/_authenticated/acq/articles'
+    '/_authenticated/sapu/articles': {
+      id: '/_authenticated/sapu/articles'
       path: '/articles'
-      fullPath: '/acq/articles'
-      preLoaderRoute: typeof AuthenticatedAcqArticlesRouteImport
-      parentRoute: typeof AuthenticatedAcqRouteRoute
+      fullPath: '/sapu/articles'
+      preLoaderRoute: typeof AuthenticatedSapuArticlesRouteImport
+      parentRoute: typeof AuthenticatedSapuRouteRoute
     }
   }
 }
 
-interface AuthenticatedAcqRouteRouteChildren {
-  AuthenticatedAcqArticlesRoute: typeof AuthenticatedAcqArticlesRoute
-  AuthenticatedAcqConfigurationsRoute: typeof AuthenticatedAcqConfigurationsRoute
-  AuthenticatedAcqMaintenanceRoute: typeof AuthenticatedAcqMaintenanceRoute
-  AuthenticatedAcqProcessorsRoute: typeof AuthenticatedAcqProcessorsRoute
-  AuthenticatedAcqScrapeRoute: typeof AuthenticatedAcqScrapeRoute
-  AuthenticatedAcqSitesRoute: typeof AuthenticatedAcqSitesRoute
-  AuthenticatedAcqWorkersRoute: typeof AuthenticatedAcqWorkersRoute
-  AuthenticatedAcqWorkflowsRoute: typeof AuthenticatedAcqWorkflowsRoute
-  AuthenticatedAcqIndexRoute: typeof AuthenticatedAcqIndexRoute
+interface AuthenticatedSapuRouteRouteChildren {
+  AuthenticatedSapuArticlesRoute: typeof AuthenticatedSapuArticlesRoute
+  AuthenticatedSapuConfigurationsRoute: typeof AuthenticatedSapuConfigurationsRoute
+  AuthenticatedSapuMaintenanceRoute: typeof AuthenticatedSapuMaintenanceRoute
+  AuthenticatedSapuProcessorsRoute: typeof AuthenticatedSapuProcessorsRoute
+  AuthenticatedSapuScrapeRoute: typeof AuthenticatedSapuScrapeRoute
+  AuthenticatedSapuSitesRoute: typeof AuthenticatedSapuSitesRoute
+  AuthenticatedSapuWorkersRoute: typeof AuthenticatedSapuWorkersRoute
+  AuthenticatedSapuWorkflowsRoute: typeof AuthenticatedSapuWorkflowsRoute
+  AuthenticatedSapuIndexRoute: typeof AuthenticatedSapuIndexRoute
 }
 
-const AuthenticatedAcqRouteRouteChildren: AuthenticatedAcqRouteRouteChildren = {
-  AuthenticatedAcqArticlesRoute: AuthenticatedAcqArticlesRoute,
-  AuthenticatedAcqConfigurationsRoute: AuthenticatedAcqConfigurationsRoute,
-  AuthenticatedAcqMaintenanceRoute: AuthenticatedAcqMaintenanceRoute,
-  AuthenticatedAcqProcessorsRoute: AuthenticatedAcqProcessorsRoute,
-  AuthenticatedAcqScrapeRoute: AuthenticatedAcqScrapeRoute,
-  AuthenticatedAcqSitesRoute: AuthenticatedAcqSitesRoute,
-  AuthenticatedAcqWorkersRoute: AuthenticatedAcqWorkersRoute,
-  AuthenticatedAcqWorkflowsRoute: AuthenticatedAcqWorkflowsRoute,
-  AuthenticatedAcqIndexRoute: AuthenticatedAcqIndexRoute,
+const AuthenticatedSapuRouteRouteChildren: AuthenticatedSapuRouteRouteChildren = {
+  AuthenticatedSapuArticlesRoute: AuthenticatedSapuArticlesRoute,
+  AuthenticatedSapuConfigurationsRoute: AuthenticatedSapuConfigurationsRoute,
+  AuthenticatedSapuMaintenanceRoute: AuthenticatedSapuMaintenanceRoute,
+  AuthenticatedSapuProcessorsRoute: AuthenticatedSapuProcessorsRoute,
+  AuthenticatedSapuScrapeRoute: AuthenticatedSapuScrapeRoute,
+  AuthenticatedSapuSitesRoute: AuthenticatedSapuSitesRoute,
+  AuthenticatedSapuWorkersRoute: AuthenticatedSapuWorkersRoute,
+  AuthenticatedSapuWorkflowsRoute: AuthenticatedSapuWorkflowsRoute,
+  AuthenticatedSapuIndexRoute: AuthenticatedSapuIndexRoute,
 }
 
-const AuthenticatedAcqRouteRouteWithChildren =
-  AuthenticatedAcqRouteRoute._addFileChildren(
-    AuthenticatedAcqRouteRouteChildren,
+const AuthenticatedSapuRouteRouteWithChildren =
+  AuthenticatedSapuRouteRoute._addFileChildren(
+    AuthenticatedSapuRouteRouteChildren,
   )
 
 interface AuthenticatedSettingsRouteRouteChildren {
@@ -855,7 +855,7 @@ const AuthenticatedSettingsRouteRouteWithChildren =
   )
 
 interface AuthenticatedRouteRouteChildren {
-  AuthenticatedAcqRouteRoute: typeof AuthenticatedAcqRouteRouteWithChildren
+  AuthenticatedSapuRouteRoute: typeof AuthenticatedSapuRouteRouteWithChildren
   AuthenticatedSettingsRouteRoute: typeof AuthenticatedSettingsRouteRouteWithChildren
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
   AuthenticatedErrorsErrorRoute: typeof AuthenticatedErrorsErrorRoute
@@ -867,7 +867,7 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
-  AuthenticatedAcqRouteRoute: AuthenticatedAcqRouteRouteWithChildren,
+  AuthenticatedSapuRouteRoute: AuthenticatedSapuRouteRouteWithChildren,
   AuthenticatedSettingsRouteRoute: AuthenticatedSettingsRouteRouteWithChildren,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
   AuthenticatedErrorsErrorRoute: AuthenticatedErrorsErrorRoute,

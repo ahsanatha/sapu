@@ -1,5 +1,5 @@
 import { ConfirmDialog } from '@/components/confirm-dialog'
-import { triggerWorkflow, updateWorkflow } from '@/lib/acq'
+import { triggerWorkflow, updateWorkflow } from '@/lib/sapu'
 import { type Workflow } from '../data/schema'
 import { useWorkflows } from './workflows-provider'
 

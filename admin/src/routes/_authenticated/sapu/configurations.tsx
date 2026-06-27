@@ -9,7 +9,7 @@ const searchSchema = z.object({
   category: z.array(z.string()).optional().catch([]),
 })
 
-export const Route = createFileRoute('/_authenticated/acq/configurations')({
+export const Route = createFileRoute('/_authenticated/sapu/configurations')({
   validateSearch: searchSchema,
   component: Configurations,
 })

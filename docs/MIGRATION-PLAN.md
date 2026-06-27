@@ -1,4 +1,4 @@
-# ACQ v3 Migration Plan: Complex → Ultra-Simple
+# Sapu Migration Plan: Complex → Ultra-Simple
 
 ## 🎯 Objective
 Transform current 2000+ line codebase into 500-line entity-driven system while maintaining all functionality.
@@ -11,13 +11,13 @@ Transform current 2000+ line codebase into 500-line entity-driven system while m
 #### 1.1 Backup Current Data
 ```bash
 # Backup existing v3 data
-pg_dump acq > acq_v3_backup.sql
+pg_dump sapu > sapu_backup.sql
 ```
 
 #### 1.2 Create New Schema
 ```bash
 # Apply new ultra-simple schema
-psql acq < schema-simple.sql
+psql sapu < schema-simple.sql
 ```
 
 #### 1.3 Data Migration Script
@@ -263,4 +263,4 @@ If migration fails:
 4. **Scalability**: Easy to add new sites and workflows
 5. **Reliability**: Fewer moving parts, less chance of failure
 
-This migration transforms ACQ v3 from a complex, code-heavy system into a lean, configuration-driven engine that embodies the principle: **"Configuration over Code"**.
+This migration transforms Sapu from a complex, code-heavy system into a lean, configuration-driven engine that embodies the principle: **"Configuration over Code"**.

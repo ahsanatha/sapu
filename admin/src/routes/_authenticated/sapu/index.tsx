@@ -1,15 +1,15 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
-import { getHealth, getSites } from '@/lib/acq'
+import { getHealth, getSites } from '@/lib/sapu'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { LongText } from '@/components/long-text'
 
-export const Route = createFileRoute('/_authenticated/acq/')({
-  component: AcqPage,
+export const Route = createFileRoute('/_authenticated/sapu/')({
+  component: SapuPage,
 })
 
-function AcqPage() {
+function SapuPage() {
   const [health, setHealth] = useState<any>(null)
   const [sites, setSites] = useState<any[]>([])
   useEffect(() => {
@@ -25,7 +25,7 @@ function AcqPage() {
   }, [])
   return (
     <div className="p-6 space-y-6">
-      <h1 className="text-2xl font-semibold">ACQ Overview</h1>
+      <h1 className="text-2xl font-semibold">Sapu Overview</h1>
       <Card>
         <CardHeader>
           <CardTitle>Health</CardTitle>

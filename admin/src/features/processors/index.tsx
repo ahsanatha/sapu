@@ -6,13 +6,13 @@ import { Main } from '@/components/layout/main'
 import { ProfileDropdown } from '@/components/profile-dropdown'
 import { Search } from '@/components/search'
 import { ThemeSwitch } from '@/components/theme-switch'
-import { getProcessors } from '@/lib/acq'
+import { getProcessors } from '@/lib/sapu'
 import { ProcessorsDialogs } from './components/processors-dialogs'
 import { ProcessorsProvider } from './components/processors-provider'
 import { ProcessorsTable } from './components/processors-table'
 import { type Processor } from './data/schema'
 
-const route = getRouteApi('/_authenticated/acq/processors')
+const route = getRouteApi('/_authenticated/sapu/processors')
 
 export function Processors() {
   const search = route.useSearch()
