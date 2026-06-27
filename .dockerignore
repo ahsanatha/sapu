@@ -1,11 +1,9 @@
 node_modules
 web/node_modules
-admin/node_modules
 dist
 .git
 .gitignore
 .DS_Store
 *.log
-admin/dist
 web/dist
 **/.cache
