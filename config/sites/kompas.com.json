@@ -1,0 +1,89 @@
+{
+  "id": "e61c28d3-ccbb-4620-8325-6ee821245cda",
+  "name": "Kompas.com",
+  "base_url": "https://kompas.com/",
+  "enabled": true,
+  "config": {
+    "scraping": {
+      "timezone": "Asia/Jakarta",
+      "page_load": {
+        "timeout": 30000,
+        "wait_until": "networkidle2"
+      },
+      "selectors": {
+        "title": [
+          "h1.read__title"
+        ],
+        "content": [
+          "div.read__content p",
+          "div.read__content"
+        ],
+        "publish_time": [
+          "div.read__time"
+        ]
+      },
+      "publish_time": {
+        "required": true,
+        "raw_fallback": true,
+        "enforce_rfc3339": false
+      },
+      "extract_links": false,
+      "accept_language": "id",
+      "follow_patterns": [
+        "/read"
+      ],
+      "exclude_patterns": [],
+      "navigator_language": "id",
+      "navigator_languages": [
+        "id"
+      ]
+    },
+    "classification": {
+      "article_patterns": [
+        "regex:^https?://([^.]+\\.)?kompas\\.com/read/.*"
+      ],
+      "exclude_patterns": []
+    },
+    "url_collection": {
+      "enabled": true,
+      "viewport": {
+        "width": 390,
+        "height": 844,
+        "isMobile": true,
+        "deviceScaleFactor": 2
+      },
+      "max_depth": 1,
+      "page_load": {
+        "timeout": 30000,
+        "wait_until": "domcontentloaded",
+        "use_shared_browser": true
+      },
+      "user_agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1",
+      "index_patterns": [
+        "/",
+        "/indeks",
+        "/index",
+        "/news",
+        "/latest"
+      ],
+      "max_found_urls": 500,
+      "index_match_type": "includes",
+      "max_urls_per_run": 1,
+      "max_links_on_page": 500,
+      "dedupe_ttl_minutes": 60,
+      "max_collected_urls": 200,
+      "respect_robots_txt": true,
+      "max_index_jobs_urls": 100,
+      "max_index_pages_per_run": 5,
+      "robots_disallow_patterns": [
+        "/privacy",
+        "/auth",
+        "/login"
+      ]
+    },
+    "duplicate_prevention": {
+      "check_url": true,
+      "check_existing_articles": true
+    }
+  }
+}

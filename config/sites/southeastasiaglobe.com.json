@@ -1,0 +1,72 @@
+{
+  "id": "556c889e-68ee-45a1-a5f9-6dea6eaa9562",
+  "name": "Southeast Asia Globe",
+  "base_url": "https://southeastasiaglobe.com",
+  "enabled": false,
+  "config": {
+    "scraping": {
+      "enabled": true,
+      "selectors": {
+        "title": "h1, .article-title, .post-title",
+        "content": "article, .article-content, .post-content",
+        "published_at": "meta[property='article:published_time'], time[datetime]"
+      },
+      "follow_patterns": [
+        "/news",
+        "/article",
+        "/story",
+        "/read"
+      ],
+      "exclude_patterns": [
+        "/video",
+        "/photo",
+        "/gallery",
+        "/tag/",
+        "/category/"
+      ],
+      "selectors_by_host": {}
+    },
+    "classification": {
+      "enabled": true,
+      "heuristics": {
+        "min_word_count": 150
+      },
+      "article_patterns": [
+        "/news",
+        "/article",
+        "/read",
+        "/story"
+      ]
+    },
+    "url_collection": {
+      "enabled": true,
+      "max_depth": 1,
+      "page_load": {
+        "timeout": 60000,
+        "wait_until": "networkidle2",
+        "use_shared_browser": true
+      },
+      "index_patterns": [
+        "/",
+        "/indeks",
+        "/index",
+        "/news",
+        "/latest"
+      ],
+      "max_found_urls": 500,
+      "index_match_type": "prefix",
+      "max_urls_per_run": 100,
+      "max_links_on_page": 200,
+      "dedupe_ttl_minutes": 60,
+      "max_collected_urls": 200,
+      "respect_robots_txt": true,
+      "max_index_jobs_urls": 100,
+      "max_index_pages_per_run": 5,
+      "robots_disallow_patterns": [
+        "/privacy",
+        "/auth",
+        "/login"
+      ]
+    }
+  }
+}

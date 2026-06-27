@@ -1,0 +1,111 @@
+{
+  "id": "3b310bae-a5c4-40e7-b0dc-71794cf8b0eb",
+  "name": "cnnindonesia",
+  "base_url": "https://www.cnnindonesia.com",
+  "enabled": true,
+  "config": {
+    "scraping": {
+      "page_load": {
+        "wait_until": "networkidle2",
+        "timeout": 30000
+      },
+      "selectors": {
+        "title": [
+          "h1.text-cnn_black",
+          "h1.title",
+          ".detail__title",
+          "h1"
+        ],
+        "content": [
+          "div.detail-text p",
+          "div.detail-text",
+          ".detail__text",
+          ".detail__content",
+          ".detail__body"
+        ],
+        "publish_time": [
+          "div.text-cnn_grey.text-sm.mb-4",
+          "meta[name='publishdate']",
+          "meta[name='dtk:publishdate']",
+          "meta[name=\"publishdate\"]",
+          "meta[name=\"dtk:publishdate\"]",
+          "meta[property=\"article:published_time\"]",
+          ".detail__date",
+          ".date",
+          "time[datetime]"
+        ]
+      },
+      "publish_time": {
+        "required": true,
+        "raw_fallback": true,
+        "enforce_rfc3339": false
+      },
+      "extract_links": false,
+      "accept_language": "id",
+      "navigator_language": "id",
+      "navigator_languages": [
+        "id"
+      ],
+      "timezone": "Asia/Jakarta",
+      "follow_patterns": [],
+      "exclude_patterns": [],
+      "selectors_by_host": {
+        "amp.cnnindonesia.com": {
+          "title": [
+            "h1",
+            ".title"
+          ],
+          "content": [
+            "article p",
+            "main article p",
+            ".content p"
+          ],
+          "publish_time": [
+            "time[datetime]",
+            "meta[property=\"article:published_time\"]"
+          ]
+        }
+      }
+    },
+    "classification": {
+      "article_patterns": [
+        "regex:^https?://(www\\.)?cnnindonesia\\.com/[a-z0-9-]+/\\d{14}-\\d+-\\d+/.+$"
+      ],
+      "exclude_patterns": []
+    },
+    "url_collection": {
+      "enabled": false,
+      "max_depth": 1,
+      "page_load": {
+        "timeout": 60000,
+        "wait_until": "networkidle2",
+        "use_shared_browser": true
+      },
+      "index_patterns": [
+        "/",
+        "/indeks",
+        "/index",
+        "/news",
+        "/latest"
+      ],
+      "max_found_urls": 500,
+      "index_match_type": "prefix",
+      "max_urls_per_run": 100,
+      "max_links_on_page": 200,
+      "dedupe_ttl_minutes": 60,
+      "max_collected_urls": 200,
+      "respect_robots_txt": true,
+      "max_index_jobs_urls": 100,
+      "max_index_pages_per_run": 5,
+      "robots_disallow_patterns": [
+        "/privacy",
+        "/auth",
+        "/login"
+      ]
+    },
+    "duplicate_prevention": {
+      "check_url": true,
+      "check_existing_articles": true
+    }
+  }
+}

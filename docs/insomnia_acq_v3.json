@@ -1,0 +1,68 @@
+{
+  "_type": "export",
+  "__export_format": 4,
+  "__export_date": "2025-11-07T00:00:00.000Z",
+  "__export_source": "acq-v3",
+  "resources": [
+    {
+      "_id": "wrk_acq_v3",
+      "_type": "workspace",
+      "name": "ACQ v3",
+      "description": "API workspace for ACQ v3 server"
+    },
+    {
+      "_id": "env_acq_v3",
+      "parentId": "wrk_acq_v3",
+      "_type": "environment",
+      "name": "Base Environment",
+      "data": {
+        "base_url": "http://localhost:3000"
+      }
+    },
+
+    { "_id": "fld_system", "parentId": "wrk_acq_v3", "_type": "request_group", "name": "System" },
+    { "_id": "req_health", "parentId": "fld_system", "_type": "request", "name": "GET /health", "method": "GET", "url": "{{ base_url }}/health" },
+    { "_id": "req_status", "parentId": "fld_system", "_type": "request", "name": "GET /api/status", "method": "GET", "url": "{{ base_url }}/api/status" },
+
+    { "_id": "fld_configurations", "parentId": "wrk_acq_v3", "_type": "request_group", "name": "Configurations" },
+    { "_id": "req_configs_list", "parentId": "fld_configurations", "_type": "request", "name": "GET /api/configurations", "method": "GET", "url": "{{ base_url }}/api/configurations?category={{ _.category }}", "parameters": [{"name":"category","value":"","description":"optional"}] },
+    { "_id": "req_configs_get", "parentId": "fld_configurations", "_type": "request", "name": "GET /api/configurations/:key", "method": "GET", "url": "{{ base_url }}/api/configurations/{{ _.key }}", "parameters": [{"name":"key","value":"example.key"}] },
+    { "_id": "req_configs_create", "parentId": "fld_configurations", "_type": "request", "name": "POST /api/configurations", "method": "POST", "url": "{{ base_url }}/api/configurations", "body": { "mimeType": "application/json", "text": "{\n  \"key\": \"example.key\",\n  \"value\": \"value\",\n  \"category\": \"general\",\n  \"description\": \"Example config\"\n}" } },
+    { "_id": "req_configs_update", "parentId": "fld_configurations", "_type": "request", "name": "PUT /api/configurations/:key", "method": "PUT", "url": "{{ base_url }}/api/configurations/{{ _.key }}", "body": { "mimeType": "application/json", "text": "{\n  \"value\": \"new-value\",\n  \"category\": \"general\",\n  \"description\": \"Updated description\"\n}" }, "parameters": [{"name":"key","value":"example.key"}] },
+    { "_id": "req_configs_delete", "parentId": "fld_configurations", "_type": "request", "name": "DELETE /api/configurations/:key", "method": "DELETE", "url": "{{ base_url }}/api/configurations/{{ _.key }}", "parameters": [{"name":"key","value":"example.key"}] },
+
+    { "_id": "fld_processors", "parentId": "wrk_acq_v3", "_type": "request_group", "name": "Processors" },
+    { "_id": "req_processors_list", "parentId": "fld_processors", "_type": "request", "name": "GET /api/processors", "method": "GET", "url": "{{ base_url }}/api/processors?type={{ _.type }}&enabled={{ _.enabled }}", "parameters": [{"name":"type","value":""},{"name":"enabled","value":""}] },
+    { "_id": "req_processors_get", "parentId": "fld_processors", "_type": "request", "name": "GET /api/processors/:id", "method": "GET", "url": "{{ base_url }}/api/processors/{{ _.id }}", "parameters": [{"name":"id","value":"default_scraper"}] },
+    { "_id": "req_processors_create", "parentId": "fld_processors", "_type": "request", "name": "POST /api/processors", "method": "POST", "url": "{{ base_url }}/api/processors", "body": { "mimeType": "application/json", "text": "{\n  \"name\": \"default_scraper\",\n  \"type\": \"scraper\",\n  \"enabled\": true,\n  \"config\": {}\n}" } },
+    { "_id": "req_processors_update", "parentId": "fld_processors", "_type": "request", "name": "PUT /api/processors/:id", "method": "PUT", "url": "{{ base_url }}/api/processors/{{ _.id }}", "parameters": [{"name":"id","value":"default_scraper"}], "body": { "mimeType": "application/json", "text": "{\n  \"name\": \"default_scraper\",\n  \"type\": \"scraper\",\n  \"enabled\": true,\n  \"config\": {}\n}" } },
+    { "_id": "req_processors_delete", "parentId": "fld_processors", "_type": "request", "name": "DELETE /api/processors/:id", "method": "DELETE", "url": "{{ base_url }}/api/processors/{{ _.id }}", "parameters": [{"name":"id","value":"default_scraper"}] },
+
+    { "_id": "fld_workflows", "parentId": "wrk_acq_v3", "_type": "request_group", "name": "Workflows" },
+    { "_id": "req_workflows_list", "parentId": "fld_workflows", "_type": "request", "name": "GET /api/workflows", "method": "GET", "url": "{{ base_url }}/api/workflows?enabled={{ _.enabled }}", "parameters": [{"name":"enabled","value":""}] },
+    { "_id": "req_workflows_get", "parentId": "fld_workflows", "_type": "request", "name": "GET /api/workflows/:id", "method": "GET", "url": "{{ base_url }}/api/workflows/{{ _.id }}", "parameters": [{"name":"id","value":"simple_scraping"}] },
+    { "_id": "req_workflows_create", "parentId": "fld_workflows", "_type": "request", "name": "POST /api/workflows", "method": "POST", "url": "{{ base_url }}/api/workflows", "body": { "mimeType": "application/json", "text": "{\n  \"name\": \"simple_scraping\",\n  \"steps\": [{\n    \"processor\": \"default_scraper\",\n    \"action\": \"scrape\",\n    \"params\": {\"url\": \"https://example.com\"}\n  }],\n  \"triggers\": {\n    \"type\": \"manual\",\n    \"enabled\": true\n  }\n}" } },
+    { "_id": "req_workflows_update", "parentId": "fld_workflows", "_type": "request", "name": "PUT /api/workflows/:id", "method": "PUT", "url": "{{ base_url }}/api/workflows/{{ _.id }}", "parameters": [{"name":"id","value":"simple_scraping"}], "body": { "mimeType": "application/json", "text": "{\n  \"id\": \"simple_scraping\",\n  \"name\": \"simple_scraping\",\n  \"steps\": [],\n  \"triggers\": {\"type\": \"manual\", \"enabled\": true}\n}" } },
+    { "_id": "req_workflows_delete", "parentId": "fld_workflows", "_type": "request", "name": "DELETE /api/workflows/:id", "method": "DELETE", "url": "{{ base_url }}/api/workflows/{{ _.id }}", "parameters": [{"name":"id","value":"simple_scraping"}] },
+    { "_id": "req_workflows_trigger", "parentId": "fld_workflows", "_type": "request", "name": "POST /api/workflows/:id/trigger", "method": "POST", "url": "{{ base_url }}/api/workflows/{{ _.id }}/trigger", "parameters": [{"name":"id","value":"simple_scraping"}] },
+
+    { "_id": "fld_sites", "parentId": "wrk_acq_v3", "_type": "request_group", "name": "Sites" },
+    { "_id": "req_sites_list", "parentId": "fld_sites", "_type": "request", "name": "GET /api/sites", "method": "GET", "url": "{{ base_url }}/api/sites?enabled={{ _.enabled }}", "parameters": [{"name":"enabled","value":""}] },
+    { "_id": "req_sites_get", "parentId": "fld_sites", "_type": "request", "name": "GET /api/sites/:id", "method": "GET", "url": "{{ base_url }}/api/sites/{{ _.id }}", "parameters": [{"name":"id","value":"detik"}] },
+    { "_id": "req_sites_create", "parentId": "fld_sites", "_type": "request", "name": "POST /api/sites", "method": "POST", "url": "{{ base_url }}/api/sites", "body": { "mimeType": "application/json", "text": "{\n  \"id\": \"detik\",\n  \"name\": \"Detik.com\",\n  \"base_url\": \"https://www.detik.com\",\n  \"enabled\": true,\n  \"config\": {\n    \"scraping\": {\n      \"selectors\": {\n        \"title\": [\"h1\"],\n        \"content\": [\".detail__body\"],\n        \"publish_time\": [\"time[datetime]\", \"meta[property=\\\"article:published_time\\\"]\", \".detail__date\", \".date\"],\n        \"links\": \"a[href]\"\n      },\n      \"selectors_by_host\": {\n        \"news.detik.com\": {\n          \"publish_time\": [\"time[datetime]\", \".detail__date\", \".date\"]\n        },\n        \"sport.detik.com\": {\n          \"publish_time\": [\"time[datetime]\", \".date\"]\n        }\n      },\n      \"publish_time\": {\n        \"required\": false,\n        \"raw_fallback\": true,\n        \"enforce_rfc3339\": true\n      },\n      \"extract_links\": true\n    }\n  }\n}" } },
+    { "_id": "req_sites_update", "parentId": "fld_sites", "_type": "request", "name": "PUT /api/sites/:id", "method": "PUT", "url": "{{ base_url }}/api/sites/{{ _.id }}", "parameters": [{"name":"id","value":"detik"}], "body": { "mimeType": "application/json", "text": "{\n  \"id\": \"detik\",\n  \"enabled\": true\n}" } },
+    { "_id": "req_sites_delete", "parentId": "fld_sites", "_type": "request", "name": "DELETE /api/sites/:id", "method": "DELETE", "url": "{{ base_url }}/api/sites/{{ _.id }}", "parameters": [{"name":"id","value":"detik"}] },
+
+    { "_id": "fld_articles", "parentId": "wrk_acq_v3", "_type": "request_group", "name": "Articles" },
+    { "_id": "req_articles_create", "parentId": "fld_articles", "_type": "request", "name": "POST /api/articles", "method": "POST", "url": "{{ base_url }}/api/articles", "body": { "mimeType": "application/json", "text": "{\n  \"site_id\": \"detik\",\n  \"url\": \"https://news.detik.com/berita/d-123\",\n  \"title\": \"Example\",\n  \"content\": \"Example content\",\n  \"metadata\": {\"publish_time\": \"2025-11-07T12:00:00Z\"}\n}" } },
+    { "_id": "req_articles_check", "parentId": "fld_articles", "_type": "request", "name": "GET /api/articles/check/:url", "method": "GET", "url": "{{ base_url }}/api/articles/check/{{ _.url }}", "parameters": [{"name":"url","value":"https%3A%2F%2Fnews.detik.com%2Fberita%2Fd-123"}] },
+
+    { "_id": "fld_events", "parentId": "wrk_acq_v3", "_type": "request_group", "name": "Events" },
+    { "_id": "req_events_list", "parentId": "fld_events", "_type": "request", "name": "GET /api/events", "method": "GET", "url": "{{ base_url }}/api/events?status={{ _.status }}&limit={{ _.limit }}", "parameters": [{"name":"status","value":""},{"name":"limit","value":"50"}] },
+    { "_id": "req_events_stream", "parentId": "fld_events", "_type": "request", "name": "GET /api/events/stream", "method": "GET", "url": "{{ base_url }}/api/events/stream" },
+
+    { "_id": "fld_scraping", "parentId": "wrk_acq_v3", "_type": "request_group", "name": "Scraping" },
+    { "_id": "req_scrape_manual", "parentId": "fld_scraping", "_type": "request", "name": "GET /api/scrape", "method": "GET", "url": "{{ base_url }}/api/scrape?url={{ _.url }}&site_id={{ _.site_id }}", "parameters": [{"name":"url","value":"https://news.detik.com/berita/d-8199924/olah-tkp-ledakan-sman-72-kelapa-gading-usai-tim-gegana-bawa-koper-besar"},{"name":"site_id","value":""}] },
+    { "_id": "req_collect_urls", "parentId": "fld_scraping", "_type": "request", "name": "GET /api/collect-urls", "method": "GET", "url": "{{ base_url }}/api/collect-urls?url={{ _.url }}&site_id={{ _.site_id }}", "parameters": [{"name":"url","value":"https://www.detik.com"},{"name":"site_id","value":""}] }
+  ]
+}

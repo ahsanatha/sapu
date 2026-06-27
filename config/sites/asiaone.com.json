@@ -1,0 +1,151 @@
+{
+  "id": "af28a355-80d5-43d2-af83-9eea20822fc7",
+  "name": "AsiaOne",
+  "base_url": "https://asiaone.com",
+  "enabled": true,
+  "config": {
+    "scraping": {
+      "timezone": "Asia/Singapore",
+      "selectors": {
+        "title": [
+          "h1[itemprop=\"headline\"]",
+          "h1.article-title",
+          "h1.title",
+          "h1",
+          "meta[property=\"og:title\"]",
+          "meta[name=\"twitter:title\"]"
+        ],
+        "content": [
+          "article p",
+          ".article-content p",
+          "div[itemprop=\"articleBody\"] p",
+          "article",
+          ".article-content",
+          "[role=\"main\"]"
+        ],
+        "publish_time": [
+          "time[datetime]",
+          "meta[property=\"article:published_time\"]",
+          "meta[name=\"date\"]",
+          "[itemprop=\"datePublished\"]",
+          ".date"
+        ],
+        "next_page_selectors": [
+          "a[rel=next]",
+          "a.next",
+          ".pagination a.next"
+        ],
+        "article_link_selectors": [
+          "a[href]"
+        ]
+      },
+      "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36",
+      "http_headers": {
+        "Accept-Language": "en-SG,en-US;q=0.9,en;q=0.8"
+      },
+      "publish_time": {
+        "required": false,
+        "raw_fallback": true,
+        "enforce_rfc3339": false
+      },
+      "follow_patterns": [
+        "regex:^https?://(www\\.)?asiaone\\.com/?$",
+        "regex:^https?://(www\\.)?asiaone\\.com/(latest|singapore|world|china|asia|showbiz|entertainment|lifestyle|digital|money|earth-one)/?$",
+        "regex:^https?://(www\\.)?asiaone\\.com/(latest|singapore|world|china|asia|showbiz|entertainment|lifestyle|digital|money|earth-one)(?:/[-A-Za-z0-9_\.]+)+/?(?:[?]page=[0-9]+)?$",
+        "regex:^https?://(www\\.)?asiaone\\.com/(latest|singapore|world|china|asia|showbiz|entertainment|lifestyle|digital|money|earth-one)/(?:[-A-Za-z0-9_\.]+/)*[-A-Za-z0-9_\.]+/?(?:\\?.*)?$"
+      ],
+      "exclude_patterns": [
+        "asiaone.com/about-us",
+        "asiaone.com/advertise-with-us",
+        "asiaone.com/pdpa",
+        "asiaone.com/terms-and-conditions",
+        "asiaone.com/video",
+        "#"
+      ],
+      "navigator_language": "en-SG",
+      "navigator_languages": [
+        "en-SG",
+        "en-US",
+        "en"
+      ]
+    },
+    "job_spawning": {
+      "create_scrape_jobs": true
+    },
+    "classification": {
+      "article_patterns": [
+        "regex:^https?://(www\\.)?asiaone\\.com/(latest|singapore|world|china|asia|showbiz|entertainment|lifestyle|digital|money|earth-one)/[-A-Za-z0-9_\\.]+/?(?:\\?.*)?$",
+        "regex:^https?://(www\\.)?asiaone\\.com/(latest|singapore|world|china|asia|showbiz|entertainment|lifestyle|digital|money|earth-one)(?:/[-A-Za-z0-9_\\.]+)+/[-A-Za-z0-9_\\.]+/?(?:\\?.*)?$",
+        "regex:^https?://(www\\.)?asiaone\\.com/(latest|singapore|world|china|asia|showbiz|entertainment|lifestyle|digital|money|earth-one)(?:/[-A-Za-z0-9_\\.]+)+/[A-Za-z0-9_\\.]+-[A-Za-z0-9_\\.]+(?:-[0-9]+)?/?(?:\\?.*)?$"
+      ],
+      "exclude_patterns": [
+        "regex:/about-us/",
+        "regex:/advertise-with-us/",
+        "regex:/pdpa/",
+        "regex:/terms-and-conditions/",
+        "regex:/video/"
+      ]
+    },
+    "url_collection": {
+      "enabled": true,
+      "timezone": "Asia/Singapore",
+      "max_depth": 1,
+      "page_load": {
+        "timeout": 25000,
+        "wait_until": "domcontentloaded",
+        "protocol_timeout": 20000,
+        "use_shared_browser": true
+      },
+      "pagination": {
+        "max_pages": 3,
+        "start_page": 1,
+        "query_param": "page"
+      },
+      "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36",
+      "http_headers": {
+        "Accept-Language": "en-SG,en-US;q=0.9,en;q=0.8"
+      },
+      "index_patterns": [
+        "latest",
+        "singapore",
+        "world",
+        "china",
+        "asia",
+        "showbiz",
+        "entertainment",
+        "lifestyle",
+        "digital",
+        "money",
+        "earth-one"
+      ],
+      "max_found_urls": 1000,
+      "accept_language": "en-SG,en-US;q=0.9,en;q=0.8",
+      "max_concurrency": 4,
+      "index_match_type": "path_segment",
+      "max_urls_per_run": 500,
+      "max_links_on_page": 500,
+      "dedupe_ttl_minutes": 1440,
+      "max_collected_urls": 500,
+      "navigator_language": "en-SG",
+      "respect_robots_txt": true,
+      "max_index_jobs_urls": 100,
+      "navigator_languages": [
+        "en-SG",
+        "en-US",
+        "en"
+      ],
+      "max_index_pages_per_run": 15,
+      "robots_disallow_patterns": [
+        "/about-us",
+        "/advertise-with-us",
+        "/pdpa",
+        "/terms-and-conditions",
+        "/video",
+        "#"
+      ]
+    },
+    "duplicate_prevention": {
+      "check_existing_articles": true
+    }
+  }
+}

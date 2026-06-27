@@ -1,0 +1,21 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #0f1216;
+  --surface: #151a21;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  background: linear-gradient(135deg, #0a0f1c 0%, #001a52 100%);
+  transition:
+    background-color 300ms ease,
+    background-image 300ms ease;
+}

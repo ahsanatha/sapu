@@ -1,0 +1,148 @@
+{
+  "id": "4c5c13a9-4601-47fa-bbaf-ad576e2b42c9",
+  "name": "Free Malaysia Today",
+  "base_url": "https://www.freemalaysiatoday.com",
+  "enabled": false,
+  "config": {
+    "scraping": {
+      "timezone": "Asia/Kuala_Lumpur",
+      "selectors": {
+        "publish_time": [
+          "meta[property='article:published_time']",
+          "meta[name='pubdate']",
+          "time[datetime]",
+          ".post-meta time",
+          ".article-date",
+          "span.article-date",
+          "div.post-date"
+        ],
+        "next_page_selectors": [
+          "a[rel=next]",
+          "a.next",
+          ".pagination a.next"
+        ],
+        "article_link_selectors": [
+          "a[href]"
+        ]
+      },
+      "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+      "http_headers": {
+        "Accept-Language": "en-MY,en-SG;q=0.9,en-US;q=0.8,en;q=0.7"
+      },
+      "publish_time": {
+        "required": false,
+        "raw_fallback": true,
+        "enforce_rfc3339": false
+      },
+      "follow_patterns": [
+        "regex:^https?://(www\\.)?freemalaysiatoday\\.com/?$",
+        "regex:^https?://(www\\.)?freemalaysiatoday\\.com/category/(nation|world|business|sports|lifestyle|opinion|columns|property|motoring|tech)/?$",
+        "regex:^https?://(www\\.)?freemalaysiatoday\\.com/category/(nation|world|business|sports|lifestyle|opinion|columns|property|motoring|tech)/([a-z0-9-]+/)?([?]page=[0-9]+)?$",
+        "regex:^https?://(www\\.)?freemalaysiatoday\\.com/category/(nation|world|business|sports|lifestyle|opinion|columns|property|motoring|tech)/[a-z0-9-]+$"
+      ],
+      "exclude_patterns": [
+        "freemalaysiatoday.com/video",
+        "freemalaysiatoday.com/podcast",
+        "freemalaysiatoday.com/advertise",
+        "freemalaysiatoday.com/privacy-policy",
+        "freemalaysiatoday.com/terms",
+        "freemalaysiatoday.com/about",
+        "freemalaysiatoday.com/about-us",
+        "freemalaysiatoday.com/tag",
+        "freemalaysiatoday.com/author",
+        "freemalaysiatoday.com/wp-json",
+        "freemalaysiatoday.com/feed",
+        "amp",
+        "#"
+      ],
+      "navigator_language": "en-MY",
+      "navigator_languages": [
+        "en-MY",
+        "en-SG",
+        "en-US",
+        "en"
+      ]
+    },
+    "job_spawning": {
+      "create_scrape_jobs": true
+    },
+    "classification": {
+      "article_patterns": [
+        "regex:^https?://(www\\.)?freemalaysiatoday\\.com/category/(nation|world|business|sports|lifestyle|opinion|columns|property|motoring|tech)/[a-z0-9-]+$"
+      ],
+      "exclude_patterns": [
+        "regex:/video/",
+        "regex:/podcast/",
+        "regex:/advertise/",
+        "regex:/privacy-policy/",
+        "regex:/terms/",
+        "regex:/about(-us)?/",
+        "regex:/tag/",
+        "regex:/author/",
+        "regex:/wp-json/",
+        "regex:/feed/",
+        "regex:/amp/"
+      ]
+    },
+    "url_collection": {
+      "enabled": true,
+      "timezone": "Asia/Kuala_Lumpur",
+      "max_depth": 1,
+      "page_load": {
+        "timeout": 10000,
+        "wait_until": "networkidle2",
+        "protocol_timeout": 10000
+      },
+      "pagination": {
+        "max_pages": 5,
+        "start_page": 1,
+        "query_param": "page"
+      },
+      "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+      "http_headers": {
+        "Accept-Language": "en-MY,en-SG;q=0.9,en-US;q=0.8,en;q=0.7"
+      },
+      "index_patterns": [
+        "category/nation",
+        "category/world",
+        "category/business",
+        "category/sports",
+        "category/lifestyle",
+        "category/opinion",
+        "category/columns",
+        "category/property",
+        "category/motoring",
+        "category/tech"
+      ],
+      "max_found_urls": 1000,
+      "accept_language": "en-MY,en-SG;q=0.9,en-US;q=0.8,en;q=0.7",
+      "max_concurrency": 4,
+      "index_match_type": "path_segment",
+      "max_urls_per_run": 400,
+      "max_links_on_page": 300,
+      "dedupe_ttl_minutes": 1440,
+      "max_collected_urls": 500,
+      "navigator_language": "en-MY",
+      "respect_robots_txt": true,
+      "max_index_jobs_urls": 100,
+      "navigator_languages": [
+        "en-MY",
+        "en-SG",
+        "en-US",
+        "en"
+      ],
+      "max_index_pages_per_run": 15,
+      "robots_disallow_patterns": [
+        "/wp-admin",
+        "/wp-json",
+        "/feed",
+        "/tag",
+        "/author",
+        "#"
+      ]
+    },
+    "duplicate_prevention": {
+      "check_existing_articles": true
+    }
+  }
+}

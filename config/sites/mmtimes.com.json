@@ -1,0 +1,99 @@
+{
+  "id": "9930268b-dbdf-4962-9a17-1d38c047c66c",
+  "name": "Myanmar Times",
+  "base_url": "https://www.mmtimes.com",
+  "enabled": true,
+  "config": {
+    "scraping": {
+      "enabled": true,
+      "selectors": {
+        "title": [
+          "h1[itemprop=\"headline\"]",
+          "h1.article-title",
+          "h1.post-title",
+          "h1",
+          "meta[property=\"og:title\"]",
+          "meta[name=\"twitter:title\"]"
+        ],
+        "content": [
+          "article p",
+          ".article-content p",
+          ".post-content p",
+          "article",
+          ".article-content",
+          ".post-content",
+          "[role=\"main\"]"
+        ],
+        "publish_time": [
+          "time[datetime]",
+          "meta[property=\"article:published_time\"]",
+          "meta[name=\"date\"]"
+        ]
+      },
+      "publish_time": {
+        "required": false,
+        "raw_fallback": true,
+        "enforce_rfc3339": false
+      },
+      "follow_patterns": [
+        "regex:^https?://(www\\.)?mmtimes\\.com/(news|business|opinion|feature|myanmar|asia)/",
+        "/news",
+        "/article",
+        "/story",
+        "/read"
+      ],
+      "exclude_patterns": [
+        "/video",
+        "/photo",
+        "/gallery",
+        "/tag/",
+        "/category/"
+      ],
+      "selectors_by_host": {}
+    },
+    "classification": {
+      "enabled": true,
+      "heuristics": {
+        "min_word_count": 150
+      },
+      "article_patterns": [
+        "regex:^https?://(www\\.)?mmtimes\\.com/(news|business|opinion|feature|myanmar|asia)/[^?]+$",
+        "/news",
+        "/article",
+        "/read",
+        "/story",
+        "regex:^https?://(www\\.)?mmtimes\\.com/[^?#]+$"
+      ]
+    },
+    "url_collection": {
+      "enabled": true,
+      "max_depth": 1,
+      "page_load": {
+        "timeout": 60000,
+        "wait_until": "networkidle2",
+        "use_shared_browser": true
+      },
+      "index_patterns": [
+        "/",
+        "/indeks",
+        "/index",
+        "/news",
+        "/latest"
+      ],
+      "max_found_urls": 500,
+      "index_match_type": "prefix",
+      "max_urls_per_run": 100,
+      "max_links_on_page": 200,
+      "dedupe_ttl_minutes": 60,
+      "max_collected_urls": 200,
+      "respect_robots_txt": true,
+      "max_index_jobs_urls": 100,
+      "max_index_pages_per_run": 5,
+      "robots_disallow_patterns": [
+        "/privacy",
+        "/auth",
+        "/login"
+      ]
+    }
+  }
+}

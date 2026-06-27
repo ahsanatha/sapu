@@ -1,0 +1,113 @@
+{
+  "id": "2cded59c-0a06-43ac-8738-ea0e58cd8461",
+  "name": "The Straits Times",
+  "base_url": "https://www.straitstimes.com",
+  "enabled": true,
+  "config": {
+    "scraping": {
+      "enabled": true,
+      "selectors": {
+        "title": [
+          "h1[itemprop=\"headline\"]",
+          "h1.article-title",
+          "h1.post-title",
+          "h1",
+          "meta[property=\"og:title\"]",
+          "meta[name=\"twitter:title\"]"
+        ],
+        "content": [
+          "article p",
+          ".article-content p",
+          ".post-content p",
+          "article",
+          ".article-content",
+          ".post-content",
+          "[role=\"main\"]"
+        ],
+        "publish_time": [
+          "time[datetime]",
+          "meta[property=\"article:published_time\"]",
+          "meta[name=\"date\"]"
+        ]
+      },
+      "publish_time": {
+        "required": false,
+        "raw_fallback": true,
+        "enforce_rfc3339": false
+      },
+      "follow_patterns": [
+        "regex:^https?://(www[.])?straitstimes[.]com/(singapore|asia|world|business|opinion|tech|lifestyle)(/[a-z0-9-]+)+$"
+      ],
+      "exclude_patterns": [
+        "/search",
+        "/tag/",
+        "/video",
+        "/photos",
+        "/podcast",
+        "/multimedia",
+        "/special-reports",
+        "/brand-insight",
+        "/advertorial",
+        "/sponsored",
+        "/newsletter",
+        "/about",
+        "/contact",
+        "?utm_",
+        "?page=",
+        "/category/"
+      ],
+      "selectors_by_host": {}
+    },
+    "classification": {
+      "enabled": true,
+      "heuristics": {
+        "min_word_count": 150
+      },
+      "list_patterns": [
+        "regex:^https?://(www[.])?straitstimes[.]com/(singapore|asia|world|business|opinion|tech|lifestyle)/?$",
+        "regex:^https?://(www[.])?straitstimes[.]com/(singapore|asia|world|business|opinion|tech|lifestyle)(/[^?]+)?[?]page=[0-9]+$",
+        "regex:^https?://(www[.])?straitstimes[.]com/(singapore|asia|world|business|opinion|tech|lifestyle)/page/[0-9]+/?$"
+      ],
+      "article_patterns": [
+        "regex:^https?://(www[.])?straitstimes[.]com/(singapore|asia|world|business|opinion|tech|lifestyle)(/[a-z0-9-]+)+$"
+      ]
+    },
+    "url_collection": {
+      "enabled": true,
+      "max_depth": 1,
+      "page_load": {
+        "timeout": 60000,
+        "wait_until": "networkidle2",
+        "use_shared_browser": true
+      },
+      "pagination": {
+        "max_pages": 5,
+        "start_page": 1,
+        "query_param": "page"
+      },
+      "index_patterns": [
+        "singapore",
+        "asia",
+        "world",
+        "business",
+        "opinion",
+        "tech",
+        "lifestyle"
+      ],
+      "max_found_urls": 500,
+      "index_match_type": "path_segment",
+      "max_urls_per_run": 100,
+      "max_links_on_page": 200,
+      "dedupe_ttl_minutes": 60,
+      "max_collected_urls": 200,
+      "respect_robots_txt": true,
+      "max_index_jobs_urls": 100,
+      "max_index_pages_per_run": 5,
+      "robots_disallow_patterns": [
+        "/privacy",
+        "/auth",
+        "/login"
+      ]
+    }
+  }
+}

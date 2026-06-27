@@ -1,0 +1,104 @@
+{
+  "id": "a67a0bf1-f14e-4211-879a-6a7f43baa378",
+  "name": "Tempo.co",
+  "base_url": "https://www.tempo.co",
+  "enabled": true,
+  "config": {
+    "scraping": {
+      "timeout": 20000,
+      "timezone": "Asia/Jakarta",
+      "page_load": {
+        "timeout": 15000,
+        "wait_until": "networkidle2",
+        "protocol_timeout": 20000
+      },
+      "selectors": {
+        "title": [
+          "h1[itemprop=\"headline\"]",
+          "h1.article__title",
+          "h1.title",
+          "h1",
+          "meta[property=\"og:title\"]",
+          "meta[name=\"twitter:title\"]"
+        ],
+        "content": [
+          "div[itemprop=\"articleBody\"] p",
+          ".entry-content p",
+          "article p",
+          ".entry-content",
+          "article",
+          "[role=\"main\"]"
+        ],
+        "publish_time": [
+          "time[itemprop=\"datePublished\"]",
+          "meta[property=\"article:published_time\"]",
+          "time[datetime]"
+        ]
+      },
+      "publish_time": {
+        "required": true,
+        "raw_fallback": true,
+        "enforce_rfc3339": true
+      },
+      "extract_links": false,
+      "accept_language": "id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7",
+      "follow_patterns": [],
+      "exclude_patterns": [
+        "regex:tempo\\.co/(video|foto)/",
+        "regex:tempo\\.co/tag/",
+        "regex:tempo\\.co/indeks"
+      ],
+      "navigator_language": "id-ID",
+      "navigator_languages": [
+        "id-ID",
+        "id"
+      ]
+    },
+    "classification": {
+      "article_patterns": [
+        "regex:tempo\\.co/(read|nasional|politik|bisnis|metro|dunia|seleb|tekno|sport|cantik|otomotif)/.*"
+      ],
+      "exclude_patterns": [
+        "regex:tempo\\.co/(indeks|tag|promo|video|foto)/.*"
+      ]
+    },
+    "url_collection": {
+      "enabled": true,
+      "timezone": "Asia/Jakarta",
+      "max_depth": 2,
+      "page_load": {
+        "timeout": 15000,
+        "wait_until": "domcontentloaded",
+        "use_shared_browser": true
+      },
+      "index_patterns": [
+        "indeks"
+      ],
+      "max_found_urls": 500,
+      "accept_language": "id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7",
+      "collection_type": "indeks",
+      "index_match_type": "path_segment",
+      "max_urls_per_run": 100,
+      "max_links_on_page": 200,
+      "dedupe_ttl_minutes": 120,
+      "max_collected_urls": 200,
+      "navigator_language": "id-ID",
+      "respect_robots_txt": true,
+      "max_index_jobs_urls": 100,
+      "navigator_languages": [
+        "id-ID",
+        "id"
+      ],
+      "max_index_pages_per_run": 3,
+      "robots_disallow_patterns": [
+        "/privacy",
+        "/auth",
+        "/login"
+      ]
+    },
+    "duplicate_prevention": {
+      "check_url": true,
+      "check_existing_articles": true
+    }
+  }
+}

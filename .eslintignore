@@ -1,0 +1,9 @@
+node_modules/
+public/
+android/
+ios/
+web/node_modules/
+web/dist/
+web/public/
+**/*.min.js
+**/assets/**

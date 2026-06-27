@@ -1,0 +1,4 @@
+dist
+node_modules
+tests/visual/baseline
+tests/visual/output
