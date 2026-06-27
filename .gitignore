@@ -162,3 +162,27 @@ yarn.lock
 benchmark/
 historical-data/
 results/.trae/
+
+# Local caches
+**/.cache/huggingface/
+.vite/
+.turbo/
+.pnpm-store/
+
+# AI assistant session state
+.opencode/
+.claude/
+.cursor/
+.aider*
+
+# Test artifacts
+playwright-report/
+test-results/
+coverage/
+
+# Storybook
+storybook-static/
+
+# OS / editor
+Thumbs.db
+.DS_Store
