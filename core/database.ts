@@ -4,7 +4,6 @@
 
 import crypto from 'node:crypto';
 
-import { pipeline, type Tensor } from '@huggingface/transformers';
 import pg from 'pg';
 import type { Pool } from 'pg';
 
@@ -57,8 +56,10 @@ interface Article {
 
 class Database {
   private pool: Pool;
-  private readonly VECTOR_DIM = 768;
-  private embedder: any | null = null;
+  private readonly VECTOR_DIM = 3072;
+  private embeddingWarned = false;
+  private readonly EMBEDDING_MODEL = process.env.OPENROUTER_EMBEDDING_MODEL || 'openai/text-embedding-3-large';
+  private readonly EMBEDDING_URL = 'https://openrouter.ai/api/v1/embeddings';
 
   constructor() {
     this.pool = new pg.Pool({
@@ -325,10 +326,38 @@ class Database {
     await this.pool.query('CREATE INDEX IF NOT EXISTS idx_scheduled_index_expires ON scheduled_index(expires_at);');
   }
 
-  private async getEmbedder(): Promise<any> {
-    if (this.embedder) return this.embedder;
-    this.embedder = await pipeline('feature-extraction', 'Xenova/multilingual-e5-base');
-    return this.embedder;
+  private async getEmbedder(texts: string[]): Promise<number[][]> {
+    const apiKey = process.env.OPENROUTER_API_KEY;
+    if (!apiKey) {
+      if (!this.embeddingWarned) {
+        console.warn('⚠️  OPENROUTER_API_KEY not set; story clustering will return empty until configured');
+        this.embeddingWarned = true;
+      }
+      return [];
+    }
+    if (!Array.isArray(texts) || texts.length === 0) return [];
+
+    const response = await fetch(this.EMBEDDING_URL, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+        'HTTP-Referer': process.env.OPENROUTER_REFERER || 'https://sapu.local',
+        'X-Title': 'sapu',
+      },
+      body: JSON.stringify({ model: this.EMBEDDING_MODEL, input: texts }),
+    });
+
+    if (!response.ok) {
+      const errText = await response.text().catch(() => '');
+      throw new Error(`OpenRouter embeddings failed: ${response.status} ${errText.slice(0, 300)}`);
+    }
+
+    const data: any = await response.json();
+    const items = Array.isArray(data?.data) ? data.data : [];
+    if (!items.length) return [];
+    const sorted = [...items].sort((a: any, b: any) => Number(a?.index ?? 0) - Number(b?.index ?? 0));
+    return sorted.map((d: any) => Array.isArray(d?.embedding) ? d.embedding : []);
   }
 
   async ensureVectorSupport(): Promise<void> {
@@ -355,12 +384,10 @@ class Database {
     if (has) return;
     let vec: number[] | null = null;
     try {
-      const embedder = await this.getEmbedder();
-      const input = `passage: ${String(text || '')}`;
-      const out: Tensor = await embedder(input, { pooling: 'mean', normalize: true });
-      const arr = (typeof (out as any).tolist === 'function') ? (out as any).tolist() : null;
-      vec = Array.isArray(arr) ? arr : null;
-    } catch {
+      const results = await this.getEmbedder([String(text || '')]);
+      vec = results[0] && results[0].length ? results[0] : null;
+    } catch (e) {
+      console.warn(`embedding failed for article ${id}:`, e instanceof Error ? e.message : String(e));
       vec = null;
     }
     if (!vec) return;
@@ -397,11 +424,11 @@ class Database {
     let candidateVecs: number[][] = [];
     let anchorVecs: number[][] = [];
     if (!vectorOk) {
-      const anchorTexts = anchors.rows.map((a: any) => `passage: ${String(a.title || a.url || a.id)}`);
+      const anchorTexts = anchors.rows.map((a: any) => String(a.title || a.url || a.id));
       anchorVecs = await this.embedTextsBatch(anchorTexts);
       const cand = await this.pool.query('SELECT id, site_id, url, title, created_at FROM articles ORDER BY created_at DESC LIMIT $1', [Math.max(20, perStory * 10)]);
       candidateRows = cand.rows;
-      const candidateTexts = candidateRows.map((n: any) => `passage: ${String(n.title || n.url || n.id)}`);
+      const candidateTexts = candidateRows.map((n: any) => String(n.title || n.url || n.id));
       candidateVecs = await this.embedTextsBatch(candidateTexts);
     }
     for (const a of anchors.rows) {
@@ -467,12 +494,11 @@ class Database {
   }
 
   async embedTextsBatch(texts: string[]): Promise<number[][]> {
-    const embedder = await this.getEmbedder();
     try {
-      const out: Tensor = await embedder(texts, { pooling: 'mean', normalize: true });
-      const arr = (typeof (out as any).tolist === 'function') ? (out as any).tolist() : null;
-      return Array.isArray(arr) ? arr : [];
-    } catch {
+      const result = await this.getEmbedder(texts);
+      return Array.isArray(result) ? result : [];
+    } catch (e) {
+      console.warn('embedTextsBatch failed:', e instanceof Error ? e.message : String(e));
       return [];
     }
   }
@@ -483,23 +509,21 @@ class Database {
     await this.ensureVectorSupport();
     const toFill = await this.pool.query('SELECT id, url, title FROM articles WHERE embedding IS NULL ORDER BY created_at DESC LIMIT $1', [limit]);
     if (!toFill.rows.length) return 0;
-    const embedder = await this.getEmbedder();
     let updated = 0;
     for (let i = 0; i < toFill.rows.length; i += batch) {
       const slice = toFill.rows.slice(i, i + batch);
-      const texts = slice.map((r: any) => `passage: ${String(r.title || r.url || r.id)}`);
+      const texts = slice.map((r: any) => String(r.title || r.url || r.id));
       let vectors: number[][] = [];
       try {
-        const out: Tensor = await embedder(texts, { pooling: 'mean', normalize: true });
-        const arr = (typeof (out as any).tolist === 'function') ? (out as any).tolist() : null;
-        vectors = Array.isArray(arr) ? arr : [];
-      } catch {
+        vectors = await this.getEmbedder(texts);
+      } catch (e) {
+        console.warn(`backfill batch failed (${slice.length} items):`, e instanceof Error ? e.message : String(e));
         vectors = [];
       }
       for (let j = 0; j < slice.length; j++) {
         const r = slice[j];
         const vec = vectors[j];
-        if (!vec) continue;
+        if (!vec || !vec.length) continue;
         const lit = this.vectorLiteral(vec);
         try {
           await this.pool.query('UPDATE articles SET embedding = $2::vector WHERE id = $1', [r.id, lit]);

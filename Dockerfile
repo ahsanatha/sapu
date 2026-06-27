@@ -10,27 +10,18 @@ WORKDIR /app
 # Prepare pnpm and install workspace deps with cache-friendly copies
 COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
 COPY web/package.json ./web/package.json
-COPY admin/package.json ./admin/package.json
 
 # Copy full source
 COPY . .
 
-# Copy all static assets from admin/public into the build context
-COPY admin/public ./admin/public
-
 # Build server and web assets
-# Ensure Vite sees VITE_* envs during Admin build
 ENV VITE_ADMIN_PASSWORD=${VITE_ADMIN_PASSWORD}
 ENV VITE_API_ORIGIN=${VITE_API_ORIGIN}
 RUN corepack enable && corepack prepare pnpm@10.24.0 --activate \
   && pnpm -w install --no-frozen-lockfile \
   && pnpm -w --filter ./web install --no-frozen-lockfile \
-  && pnpm -w --filter ./admin install --no-frozen-lockfile \
   && pnpm run build \
   && pnpm -w --filter ./web run build \
-  && pnpm -w --filter ./admin run build \
-  && mkdir -p public/admin \
-  && cp -r admin/dist/. public/admin/ \
   && cp schema.sql dist/schema.sql
 
 FROM node:22.14.0-slim AS runtime

@@ -30,10 +30,8 @@ async function cosimBatch(params: any, _config: any): Promise<any> {
   const candidates: string[] = Array.isArray(params?.candidates) ? params.candidates.map((t: any) => String(t)) : [];
   const topK = Math.max(1, Number(params?.top_k ?? 10));
   if (!anchors.length || !candidates.length) return { anchors: [], candidates: [], top_k: topK };
-  const prefixedAnchors = anchors.map((t) => `passage: ${t}`);
-  const prefixedCandidates = candidates.map((t) => `passage: ${t}`);
-  const A = await db.embedTextsBatch(prefixedAnchors);
-  const B = await db.embedTextsBatch(prefixedCandidates);
+  const A = await db.embedTextsBatch(anchors);
+  const B = await db.embedTextsBatch(candidates);
   const results: Array<{ index: number; top: Array<{ index: number; score: number; text: string }> }> = [];
   for (let i = 0; i < A.length; i++) {
     const a = A[i];

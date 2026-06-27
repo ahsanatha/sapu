@@ -17,7 +17,7 @@ A configuration-driven news scraper. The complex stuff lives in the database as 
 
 ## Why Sapu
 
-Most scrapers accumulate abstractions: workers, queues, classifiers, schedulers, each their own service. Sapu collapses that. One TypeScript service, one Postgres database, one RabbitMQ exchange, and a small Next.js admin panel.
+Most scrapers accumulate abstractions: workers, queues, classifiers, schedulers, each their own service. Sapu collapses that. One TypeScript service, one Postgres database, one RabbitMQ exchange, and a small Vite admin panel.
 
 Three things drove the design:
 
@@ -45,7 +45,7 @@ pnpm install
 pnpm db:init          # create schema + seed reference data
 pnpm dev              # API server (tsx watch)
 pnpm worker           # scraper worker process
-pnpm web:dev          # admin panel (Next.js)
+pnpm web:dev          # admin panel (Vite + React)
 ```
 
 Requires Node 22+, pnpm 10+, Postgres 15+, RabbitMQ 3.13+.
