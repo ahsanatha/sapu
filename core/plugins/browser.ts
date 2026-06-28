@@ -1,4 +1,8 @@
-import { launch, type Browser } from 'puppeteer';
+import puppeteer from 'puppeteer-extra';
+import StealthPlugin from 'puppeteer-extra-plugin-stealth';
+import type { Browser } from 'puppeteer';
+
+puppeteer.use(StealthPlugin());
 
 let sharedBrowser: Browser | null = null;
 let sharedCreatedAt: number | null = null;
@@ -50,7 +54,7 @@ export async function getBrowser(config: any): Promise<Browser> {
   } as const;
 
   try {
-    const browser = await launch({ ...launchBase, pipe: true, executablePath });
+    const browser = await puppeteer.launch({ ...launchBase, pipe: true, executablePath });
     if (useShared) {
       sharedBrowser = browser;
       sharedBrowser.on('disconnected', () => { sharedBrowser = null; });
@@ -61,7 +65,7 @@ export async function getBrowser(config: any): Promise<Browser> {
     return browser;
   } catch (err: any) {
     console.warn('⚠️ Puppeteer launch (pipe) failed, retrying without pipe:', err?.message || String(err));
-    const browser = await launch({ ...launchBase, executablePath });
+    const browser = await puppeteer.launch({ ...launchBase, executablePath });
     if (useShared) {
       sharedBrowser = browser;
       sharedBrowser.on('disconnected', () => { sharedBrowser = null; });
@@ -73,7 +77,7 @@ export async function getBrowser(config: any): Promise<Browser> {
   }
 }
 
-export async function createPage(config: any): Promise<{ browser: Browser; page: any }> {
+export async function createPage(config: any): Promise<{ browser: Browser; page: any; isShared: boolean }> {
   const useShared: boolean = config?.page_load?.use_shared_browser !== false;
   const recyclePagesCfg = (
     process.env.PUPPETEER_RECYCLE_PAGES !== undefined
@@ -88,6 +92,7 @@ export async function createPage(config: any): Promise<{ browser: Browser; page:
   const recyclePages = isNaN(recyclePagesCfg) ? 200 : Math.max(1, recyclePagesCfg);
   const recycleMs = isNaN(recycleMsCfg) ? 30 * 60 * 1000 : Math.max(60000, recycleMsCfg);
 
+  let isShared = false;
   if (useShared && sharedBrowser && sharedBrowser.isConnected()) {
     const now = Date.now();
     const ageOk = sharedCreatedAt ? (now - sharedCreatedAt) < recycleMs : true;
@@ -101,10 +106,11 @@ export async function createPage(config: any): Promise<{ browser: Browser; page:
   }
 
   const browser = await getBrowser(config);
+  isShared = useShared && browser === sharedBrowser;
   const page = await browser.newPage();
-  if (useShared && browser === sharedBrowser) {
+  if (isShared) {
     sharedPagesCreated += 1;
     if (!sharedCreatedAt) sharedCreatedAt = Date.now();
   }
-  return { browser, page };
+  return { browser, page, isShared };
 }

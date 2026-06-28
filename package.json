@@ -28,7 +28,9 @@
     "express": "4.21.2",
     "node-cron": "3.0.0",
     "pg": "8.11.0",
-    "puppeteer": "24.29.1"
+    "puppeteer": "24.29.1",
+    "puppeteer-extra": "3.3.6",
+    "puppeteer-extra-plugin-stealth": "2.11.2"
   },
   "devDependencies": {
     "@types/amqplib": "0.10.0",

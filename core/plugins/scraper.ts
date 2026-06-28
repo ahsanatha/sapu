@@ -4,9 +4,8 @@ import { db } from '../database.js';
 import type { Site } from '../types.js';
 import { resolvePageLoad, resolveWaitUntil, resolveClientContext, applyPageContext, resolveSelectors } from '../config.js';
 
-import { collectUrls } from './url-collector.js';
 import { notify } from './notifier.js';
-import { getBrowser, createPage } from './browser.js';
+import { createPage } from './browser.js';
 
 export async function scrape(action: string, params: any, config: any): Promise<any> {
   switch (action) {
@@ -25,7 +24,7 @@ async function getPageHtml(params: any, config: any): Promise<any> {
   const pl = resolvePageLoad(site, config, 'scraping');
   const waitUntil = resolveWaitUntil(site, config, 'scraping');
   const ctx = resolveClientContext(site, config, 'scraping');
-  const { browser, page } = await createPage({ ...config, page_load: { ...config.page_load, protocol_timeout: pl.protocol_timeout } });
+  const { browser, page, isShared } = await createPage({ ...config, page_load: { ...config.page_load, protocol_timeout: pl.protocol_timeout } });
   await applyPageContext(page, ctx);
   try {
     await page.goto(url, { waitUntil, timeout: pl.timeout });
@@ -35,7 +34,7 @@ async function getPageHtml(params: any, config: any): Promise<any> {
     return { success: false, error: error instanceof Error ? error.message : String(error) };
   } finally {
     try { await page.close(); } catch {}
-    try { if (browser) await browser.close(); } catch {}
+    try { if (browser && !isShared) await browser.close(); } catch {}
   }
 }
 
@@ -47,7 +46,7 @@ async function performScraping(params: any, config: any): Promise<any> {
   const ctx = resolveClientContext(site, config, 'scraping');
   const selectors = resolveSelectors(site, config, url);
 
-  const { browser, page } = await createPage({ ...config, page_load: { ...config.page_load, protocol_timeout: pl.protocol_timeout } });
+  const { browser, page, isShared } = await createPage({ ...config, page_load: { ...config.page_load, protocol_timeout: pl.protocol_timeout } });
   await applyPageContext(page, ctx);
   try {
     if (params.check_duplicates) {
@@ -165,6 +164,6 @@ async function performScraping(params: any, config: any): Promise<any> {
     return { success: false, error: error instanceof Error ? error.message : String(error) };
   } finally {
     try { await page.close(); } catch {}
-    try { if (browser) await browser.close(); } catch {}
+    try { if (browser && !isShared) await browser.close(); } catch {}
   }
 }

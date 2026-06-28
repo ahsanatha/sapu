@@ -39,12 +39,28 @@ class Engine {
   private heartbeatInterval: NodeJS.Timeout | null = null;
   private stopping = false;
   private stopped = false;
+  // Track in-flight workflow executions so SIGTERM can wait for them.
+  private inFlight = new Set<Promise<void>>();
+  private heartbeatAbort: AbortController | null = null;
 
   async start(): Promise<void> {
     console.log('🚀 Starting Sapu Engine...');
-    
-    // Connect to infrastructure
-    await db.connect();
+
+    // Connect to infrastructure with bounded retries so a slow broker doesn't
+    // cause an infinite startup crash loop. RabbitMQ has its own reconnect
+    // loop, but Postgres + initial queue connect need a guard.
+    const maxAttempts = 5;
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        await db.connect();
+        break;
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : String(e);
+        console.error(`DB connect failed (attempt ${attempt}/${maxAttempts}): ${msg}`);
+        if (attempt === maxAttempts) throw e;
+        await new Promise((r) => setTimeout(r, Math.min(15000, 1000 * attempt)));
+      }
+    }
     try {
       await queue.connect();
     } catch (e) {
@@ -76,14 +92,14 @@ class Engine {
       this.maintenanceTasks.push(sweepTask);
       console.log('🧹 scheduled_index TTL sweep scheduled every 5 minutes');
     } catch {}
-    
+
     // Load and start workflows
     await this.loadWorkflows();
     await this.setupWorkflowWatcher();
     await this.setupHeartbeat();
-    
+
     this.running = true;
-    
+
     console.log('✅ Engine started successfully');
   }
 
@@ -94,12 +110,14 @@ class Engine {
     this.stopping = true;
     console.log('🛑 Stopping engine...');
     this.running = false;
-    
-    // Clear scheduled jobs
+
+    // Abort any pending heartbeat fetch so it doesn't block shutdown
+    try { this.heartbeatAbort?.abort(); } catch {}
+
+    // Clear scheduled jobs (stops future cron ticks; in-flight runs continue below)
     for (const [, job] of this.scheduledJobs) {
       try {
         job.task.stop();
-        // Destroy to free resources; safe no-op if not supported
         // @ts-ignore
         job.task.destroy?.();
       } catch (e) {
@@ -129,8 +147,23 @@ class Engine {
     }
     this.maintenanceTasks = [];
 
-    await queue.close();
-    await db.close();
+    // Drain in-flight workflow executions (with a hard cap so we don't hang forever).
+    if (this.inFlight.size > 0) {
+      console.log(`⏳ Waiting for ${this.inFlight.size} in-flight workflow(s) to finish...`);
+      const drainTimeout = setTimeout(() => {
+        console.warn(`⏱️  In-flight drain timeout; ${this.inFlight.size} workflow(s) still running`);
+      }, 15000);
+      drainTimeout.unref();
+      try {
+        await Promise.allSettled(Array.from(this.inFlight));
+      } catch (e) {
+        console.warn('Error draining workflows:', e instanceof Error ? e.message : String(e));
+      }
+      clearTimeout(drainTimeout);
+    }
+
+    try { await queue.close(); } catch (e) { console.warn('queue.close failed:', e instanceof Error ? e.message : String(e)); }
+    try { await db.close(); } catch (e) { console.warn('db.close failed:', e instanceof Error ? e.message : String(e)); }
     this.stopped = true;
     this.stopping = false;
     console.log('✅ Engine stopped');
@@ -303,7 +336,23 @@ class Engine {
   }
 
   async executeWorkflow(workflow: Workflow): Promise<void> {
+    if (this.stopping) {
+      console.log(`⏭️  Skipping workflow ${workflow.name} - engine is stopping`);
+      return;
+    }
     console.log(`🔄 Executing workflow: ${workflow.name}`);
+    const p = (async () => {
+      try {
+        await this.runWorkflowSteps(workflow);
+      } catch (error) {
+        console.error(`❌ Workflow failed: ${workflow.name}`, error);
+      }
+    })();
+    this.inFlight.add(p);
+    try { await p; } finally { this.inFlight.delete(p); }
+  }
+
+  private async runWorkflowSteps(workflow: Workflow): Promise<void> {
     
     try {
       // Check workflow conditions
@@ -495,6 +544,7 @@ class Engine {
       const workerId = String(process.env.WORKER_ID || `${os.hostname()}:${process.pid}`).trim();
       const intervalMs = Math.max(1000, Number(process.env.HEARTBEAT_INTERVAL_MS ?? 2000));
       if (this.heartbeatInterval) clearInterval(this.heartbeatInterval);
+      this.heartbeatAbort = new AbortController();
       this.heartbeatInterval = setInterval(async () => {
         try {
           const payload = {
@@ -503,11 +553,11 @@ class Engine {
             queue_connected: isQueueConnected(),
             prefetch: getPrefetchMap(),
           };
-          // @ts-ignore
           await fetch(`${monitorUrl}/api/worker/heartbeat`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
+            body: JSON.stringify(payload),
+            signal: this.heartbeatAbort?.signal,
           }).catch(() => {});
         } catch {}
       }, intervalMs);
@@ -521,15 +571,32 @@ class Engine {
 // Export singleton instance
 export const engine = new Engine();
 
-// Graceful shutdown
-process.on('SIGINT', async () => {
-  console.log('\n🛑 Received SIGINT, shutting down gracefully...');
-  await engine.stop();
+// Graceful shutdown with a hard timeout (so Docker SIGKILL doesn't leak resources).
+let shuttingDown = false;
+async function gracefulShutdown(signal: string): Promise<void> {
+  if (shuttingDown) return;
+  shuttingDown = true;
+  console.log(`\n🛑 Received ${signal}, shutting down gracefully...`);
+  // Hard cap: if engine.stop() hangs, force-exit so Docker can recycle the container.
+  const hardKill = setTimeout(() => {
+    console.error('⏱️  Shutdown timed out, forcing exit');
+    process.exit(1);
+  }, 25000);
+  hardKill.unref();
+  try {
+    await engine.stop();
+  } catch (e) {
+    console.error('engine.stop failed:', e instanceof Error ? e.message : String(e));
+  }
   process.exit(0);
-});
+}
 
-process.on('SIGTERM', async () => {
-  console.log('\n🛑 Received SIGTERM, shutting down gracefully...');
-  await engine.stop();
-  process.exit(0);
+process.on('SIGINT', () => void gracefulShutdown('SIGINT'));
+process.on('SIGTERM', () => void gracefulShutdown('SIGTERM'));
+
+process.on('unhandledRejection', (reason) => {
+  console.error('Unhandled promise rejection:', reason);
+});
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught exception:', err);
 });

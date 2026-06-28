@@ -30,50 +30,62 @@ class Queue {
   // Per-queue prefetch map
   private prefetchByQueue: Record<string, number> = {};
   private lastConnectFailedAt: number | null = null;
-  private connectCooldownMs: number = Math.max(0, Number(process.env.QUEUE_CONNECT_COOLDOWN_MS ?? 30000));
+  private connectCooldownMs: number = Math.max(0, Number(process.env.QUEUE_CONNECT_COOLDOWN_MS ?? 5000));
   // Throttle publish warnings when broker is unavailable
   private lastPublishWarnAt: number | null = null;
   private publishWarnCooldownMs: number = Math.max(0, Number(process.env.QUEUE_PUBLISH_WARN_COOLDOWN_MS ?? 10000));
   private connecting: boolean = false;
+  // Consumer handlers registered for auto-reconnect on connection drop
+  private consumerHandlers: Record<string, (job: Job) => Promise<void>> = {};
+  // Reconnect state
+  private reconnectAttempt = 0;
+  private reconnectTimer: NodeJS.Timeout | null = null;
+  private closing = false;
 
   constructor() {
-    // Default aligns with local RabbitMQ config from v2 (user: sapu, pass: sapu123, vhost: /sapu)
-    this.url = process.env.RABBITMQ_URL || 'amqp://sapu:sapu123@172.17.0.2:5672/sapu';
-    console.log('🐰 Queue URL:', this.url);
+    const url = process.env.RABBITMQ_URL;
+    if (!url) {
+      throw new Error('RABBITMQ_URL env var is required (e.g. amqp://user:pass@host:5672/vhost)');
+    }
+    this.url = url;
+    // Log host only, never the credentials
+    try {
+      const u = new URL(url);
+      console.log('🐰 Queue host:', u.host);
+    } catch {
+      console.log('🐰 Queue URL: <unparseable>');
+    }
   }
 
   async connect(): Promise<void> {
-    try {
-      if (this.isConnected) return;
-      if (this.connecting) return;
-      // Prevent rapid reconnect attempts to avoid log spam
-      if (this.lastConnectFailedAt && (Date.now() - this.lastConnectFailedAt) < this.connectCooldownMs) {
-        // Cooldown active; skip attempting to reconnect
-        return;
-      }
+    if (this.closing) throw new Error('Queue is closing');
+    if (this.isConnected) return;
+    if (this.connecting) return;
 
-      this.connecting = true;
-      console.log('🐰 Connecting to RabbitMQ...');
+    this.connecting = true;
+    console.log(`🐰 Connecting to RabbitMQ (attempt ${this.reconnectAttempt + 1})...`);
+    try {
       this.connection = await amqp.connect(this.url);
       this.channel = await this.connection.createChannel();
 
       // Assert queues for different job types
-      await this.channel.assertQueue('scraping', { 
+      await this.channel.assertQueue('scraping', {
         durable: true,
-        arguments: { 'x-max-priority': 10 }
+        arguments: { 'x-max-priority': 10, 'x-max-length': 100000, 'x-overflow': 'reject-publish' }
       });
-      await this.channel.assertQueue('url_collection', { 
+      await this.channel.assertQueue('url_collection', {
         durable: true,
-        arguments: { 'x-max-priority': 10 }
+        arguments: { 'x-max-priority': 10, 'x-max-length': 100000, 'x-overflow': 'reject-publish' }
       });
-      await this.channel.assertQueue('workflow', { 
+      await this.channel.assertQueue('workflow', {
         durable: true,
-        arguments: { 'x-max-priority': 10 }
+        arguments: { 'x-max-priority': 10, 'x-max-length': 100000, 'x-overflow': 'reject-publish' }
       });
-      // Dead-letter queues for persistent failures
-      await this.channel.assertQueue('scraping_dead', { durable: true });
-      await this.channel.assertQueue('url_collection_dead', { durable: true });
-      await this.channel.assertQueue('workflow_dead', { durable: true });
+      // Dead-letter queues: bounded + TTL so they don't grow forever
+      const DLQ_ARGS = { 'x-message-ttl': 7 * 24 * 3600 * 1000, 'x-max-length': 10000 };
+      await this.channel.assertQueue('scraping_dead', { durable: true, arguments: DLQ_ARGS });
+      await this.channel.assertQueue('url_collection_dead', { durable: true, arguments: DLQ_ARGS });
+      await this.channel.assertQueue('workflow_dead', { durable: true, arguments: DLQ_ARGS });
 
       // Set initial global prefetch from env (fallback 1). This is only the boot default;
       // runtime scaling is driven by DB config via autoscaler.
@@ -83,30 +95,60 @@ class Queue {
 
       this.isConnected = true;
       this.lastConnectFailedAt = null;
+      this.reconnectAttempt = 0;
       console.log('🐰 Queue connected successfully');
 
-      // Handle connection errors
-      this.connection.on('error', (err: any) => {
-        console.error('RabbitMQ connection error:', err);
-        this.isConnected = false;
-      });
-
-      this.connection.on('close', () => {
-        console.log('RabbitMQ connection closed');
-        this.isConnected = false;
-      });
-
-      this.connecting = false;
-    } catch (error) {
-      this.lastConnectFailedAt = Date.now();
-      this.connecting = false;
-      const msg = error instanceof Error ? error.message : String(error);
-      // Suppress logs during cooldown-triggered failures
-      if (!msg.includes('connect cooldown')) {
-        console.error('Failed to connect to RabbitMQ:', msg);
+      // Re-register any consumers that were attached before the disconnect
+      const consumerNames = Object.keys(this.consumerHandlers);
+      if (consumerNames.length) {
+        console.log(`🐰 Re-registering ${consumerNames.length} consumer(s)...`);
+        for (const name of consumerNames) {
+          try { await this.consume(name, this.consumerHandlers[name]); } catch (e) {
+            console.error(`Failed to re-register consumer ${name}:`, e instanceof Error ? e.message : String(e));
+          }
+        }
       }
+
+      // Handle connection errors and drops
+      this.connection.on('error', (err: any) => {
+        console.error('RabbitMQ connection error:', err instanceof Error ? err.message : String(err));
+        this.isConnected = false;
+      });
+      this.connection.on('close', () => {
+        if (this.closing) return;
+        console.warn('⚠️  RabbitMQ connection closed; will reconnect with backoff');
+        this.isConnected = false;
+        // Tear down stale consumer channels
+        for (const q of Object.keys(this.consumerChannels)) {
+          try { this.consumerChannels[q].close(); } catch {}
+          delete this.consumerChannels[q];
+        }
+        this.scheduleReconnect();
+      });
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      console.error('Failed to connect to RabbitMQ:', msg);
+      this.lastConnectFailedAt = Date.now();
       throw error;
+    } finally {
+      this.connecting = false;
     }
+  }
+
+  private scheduleReconnect(): void {
+    if (this.closing || this.reconnectTimer) return;
+    this.reconnectAttempt += 1;
+    // Exponential backoff: 1s, 2s, 4s, 8s, ... capped at 60s
+    const delay = Math.min(60000, 1000 * Math.pow(2, Math.min(6, this.reconnectAttempt - 1)));
+    console.log(`🐰 Reconnect scheduled in ${delay}ms (attempt ${this.reconnectAttempt})`);
+    this.reconnectTimer = setTimeout(async () => {
+      this.reconnectTimer = null;
+      try {
+        await this.connect();
+      } catch {
+        this.scheduleReconnect();
+      }
+    }, delay);
   }
 
   async publish(job: Job): Promise<void> {
@@ -146,6 +188,8 @@ class Queue {
   }
 
   async consume(queueName: string, handler: (job: Job) => Promise<void>): Promise<void> {
+    // Remember the handler so we can re-register on reconnect
+    this.consumerHandlers[queueName] = handler;
     try {
       if (!this.channel || !this.isConnected) {
         try { await this.connect(); } catch {}
@@ -326,6 +370,11 @@ class Queue {
   }
 
   async close(): Promise<void> {
+    this.closing = true;
+    if (this.reconnectTimer) {
+      clearTimeout(this.reconnectTimer);
+      this.reconnectTimer = null;
+    }
     try {
       // Close consumer channels
       for (const [q, ch] of Object.entries(this.consumerChannels)) {
@@ -336,12 +385,12 @@ class Queue {
         await this.channel.close();
         this.channel = null;
       }
-      
+
       if (this.connection) {
         await this.connection.close();
         this.connection = null;
       }
-      
+
       this.isConnected = false;
       console.log('🐰 Queue disconnected');
     } catch (error) {

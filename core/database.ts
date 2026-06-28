@@ -10,6 +10,22 @@ import type { Pool } from 'pg';
 import type { SiteConfig } from './types.js';
 import { listSites as fileListSites, getSite as fileGetSite } from './sites.js';
 
+// RFC 4122 v5 UUID derivation from an arbitrary string key.
+// Uses a fixed namespace (Sapu's own) and sets the version/variant bits correctly.
+const SAPU_UUID_NAMESPACE = 'a1b2c3d4-e5f6-5789-9abc-def012345678';
+function uuidv5(name: string): string {
+  const h = crypto.createHash('sha1').update(SAPU_UUID_NAMESPACE + ':' + String(name)).digest();
+  const bytes = Buffer.from(h.subarray(0, 16));
+  bytes[6] = (bytes[6] & 0x0f) | 0x50; // version 5
+  bytes[8] = (bytes[8] & 0x3f) | 0x80; // variant 10xx
+  const hex = bytes.toString('hex');
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20, 32)}`;
+}
+
+function siteUuid(idOrKey: string): string {
+  return uuidv5('sapu:site:' + String(idOrKey || ''));
+}
+
 interface Configuration {
   key: string;
   value: any; // JSONB in database, represented as JS object
@@ -252,14 +268,7 @@ class Database {
     const metadataJson = article.metadata === undefined
       ? null
       : (typeof article.metadata === 'string' ? article.metadata : JSON.stringify(article.metadata));
-    const synthesizeUuid = (key: string): string => {
-      if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(key)) return key;
-      const h = crypto.createHash('sha1').update(String(key)).digest('hex');
-      // Format as UUID v5-like (not real namespace UUID, but stable)
-      const uuid = `${h.slice(0,8)}-${h.slice(8,12)}-${h.slice(12,16)}-${h.slice(16,20)}-${h.slice(20,32)}`;
-      return uuid;
-    };
-    const siteIdUuid = synthesizeUuid(String(article.site_id || 'site'));
+    const siteIdUuid = siteUuid(article.site_id || 'site');
     const result = await this.pool.query(`
       INSERT INTO articles (site_id, url, title, title_hash, content, content_hash, metadata)
       VALUES ($1::uuid, $2, $3, $4, $5, $6, $7)
@@ -281,6 +290,16 @@ class Database {
   async articleExists(url: string): Promise<boolean> {
     const result = await this.pool.query('SELECT 1 FROM articles WHERE url = $1', [url]);
     return result.rows.length > 0;
+  }
+
+  async articlesExistBatch(urls: string[]): Promise<Set<string>> {
+    const unique = Array.from(new Set(urls.filter((u) => typeof u === 'string' && u.length)));
+    if (!unique.length) return new Set();
+    const result = await this.pool.query(
+      'SELECT url FROM articles WHERE url = ANY($1::text[])',
+      [unique]
+    );
+    return new Set(result.rows.map((r: any) => String(r.url)));
   }
 
   async findDuplicateArticles(url?: string, title?: string): Promise<Article[]> {
@@ -414,9 +433,7 @@ class Database {
     const sites = await this.getSites(true);
     const siteUuidMap: Record<string, string> = {};
     for (const s of sites) {
-      const h = crypto.createHash('sha1').update(String(s.id)).digest('hex');
-      const uuid = `${h.slice(0,8)}-${h.slice(8,12)}-${h.slice(12,16)}-${h.slice(16,20)}-${h.slice(20,32)}`;
-      siteUuidMap[uuid] = s.name;
+      siteUuidMap[siteUuid(s.id)] = s.name;
     }
     const used = new Set<string>();
     const stories: Array<{ id: string; title: string; articles: any[] }> = [];
@@ -564,11 +581,9 @@ class Database {
     const values: any[] = [];
 
     if (site_id) {
-      let sid = site_id;
-      if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(sid)) {
-        const h = crypto.createHash('sha1').update(String(sid)).digest('hex');
-        sid = `${h.slice(0,8)}-${h.slice(8,12)}-${h.slice(12,16)}-${h.slice(16,20)}-${h.slice(20,32)}`;
-      }
+      const sid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(site_id)
+        ? site_id
+        : siteUuid(site_id);
       values.push(sid);
       query += ` AND site_id = $${values.length}::uuid`;
     }

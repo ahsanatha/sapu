@@ -5,7 +5,7 @@ import { queue } from '../queue.js';
 import type { Site } from '../types.js';
 import { resolvePageLoad, resolveWaitUntil, resolveClientContext, applyPageContext, resolvePatterns, resolveLimits } from '../config.js';
 
-import { getBrowser, createPage } from './browser.js';
+import { createPage } from './browser.js';
 
 export async function collectUrls(action: string, params: any, config: any, asWorker?: boolean): Promise<any> {
   switch (action) {
@@ -70,7 +70,7 @@ async function collectFromSite(params: any, config: any, asWorker?: boolean): Pr
   const patterns = resolvePatterns(site, config);
   const limits = resolveLimits(site, config);
 
-  const { browser, page } = await createPage({ ...config, page_load: { ...config.page_load, protocol_timeout: pl.protocol_timeout } });
+  const { browser, page, isShared } = await createPage({ ...config, page_load: { ...config.page_load, protocol_timeout: pl.protocol_timeout } });
   await applyPageContext(page, ctx);
   try {
     const targetUrl: string = params.url || site.base_url;
@@ -79,16 +79,18 @@ async function collectFromSite(params: any, config: any, asWorker?: boolean): Pr
 
     const allLinks: string[] = await page.$$eval('a[href]', (anchors: any[]) => anchors.map((a: any) => String(a.href || a.getAttribute('href') || '')));
     const cleanLinks = allLinks.filter((u) => typeof u === 'string' && u.length);
-    const followPatterns = Array.isArray(patterns.follow) ? patterns.follow : [];
-    const excludePatterns = Array.isArray(patterns.exclude) ? patterns.exclude : [];
-    const articlePatterns = Array.isArray((site as any)?.config?.classification?.article_patterns)
-      ? (site as any).config.classification.article_patterns as string[]
-      : [];
-    console.log('url-collector:site:links', { urls_found: cleanLinks.length, follow_patterns_count: followPatterns.length, exclude_patterns_count: excludePatterns.length });
+    const followCompiled = compilePatterns(Array.isArray(patterns.follow) ? patterns.follow : []);
+    const excludeCompiled = compilePatterns(Array.isArray(patterns.exclude) ? patterns.exclude : []);
+    const articleCompiled = compilePatterns(
+      Array.isArray((site as any)?.config?.classification?.article_patterns)
+        ? (site as any).config.classification.article_patterns as string[]
+        : []
+    );
+    console.log('url-collector:site:links', { urls_found: cleanLinks.length, follow_patterns_count: followCompiled.length, exclude_patterns_count: excludeCompiled.length });
     const matched: string[] = [];
     for (const u of cleanLinks) {
-      const include = followPatterns.some((p) => matchesPattern(u, p));
-      const exclude = excludePatterns.some((p) => matchesPattern(u, p));
+      const include = followCompiled.some((p) => patternMatches(u, p));
+      const exclude = excludeCompiled.some((p) => patternMatches(u, p));
       if (include && !exclude) matched.push(u);
     }
     console.log('url-collector:site:matched', { matched_count: matched.length });
@@ -100,13 +102,14 @@ async function collectFromSite(params: any, config: any, asWorker?: boolean): Pr
     let spawnedCollect = 0;
     let articleUrls = 0;
     let indexUrls = 0;
+    const checkDup = !!config.duplicate_prevention?.check_url;
+    const existingSet = checkDup ? await db.articlesExistBatch(limited) : new Set<string>();
     for (const u of limited) {
-      const exists = config.duplicate_prevention?.check_url ? await db.articleExists(u) : false;
-      if (exists) {
+      if (checkDup && existingSet.has(u)) {
         duplicatesSkipped++;
         continue;
       }
-      const isArticle = articlePatterns.some((p) => matchesPattern(u, p));
+      const isArticle = articleCompiled.some((p) => patternMatches(u, p));
       if (isArticle) {
         articleUrls++;
         collected.push(u);
@@ -152,15 +155,23 @@ async function collectFromSite(params: any, config: any, asWorker?: boolean): Pr
     return { success: false, error: error instanceof Error ? error.message : String(error) };
   } finally {
     try { await page.close(); } catch {}
-    try { if (browser) await browser.close(); } catch {}
+    try { if (browser && !isShared) await browser.close(); } catch {}
   }
 }
 
-function matchesPattern(url: string, pattern: string): boolean {
-  if (!pattern) return false;
-  if (pattern.startsWith('regex:')) {
-    const re = new RegExp(pattern.slice('regex:'.length));
-    return re.test(url);
-  }
-  return url.includes(pattern);
+type CompiledPattern = { regex?: RegExp; literal?: string };
+
+function compilePatterns(patterns: string[]): CompiledPattern[] {
+  return patterns.map((p) => {
+    if (!p) return { literal: '' };
+    if (p.startsWith('regex:')) {
+      try { return { regex: new RegExp(p.slice('regex:'.length)) }; } catch { return { literal: p }; }
+    }
+    return { literal: p };
+  });
+}
+
+function patternMatches(url: string, p: CompiledPattern): boolean {
+  if (p.regex) return p.regex.test(url);
+  return !!p.literal && url.includes(p.literal);
 }

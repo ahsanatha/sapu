@@ -7,73 +7,99 @@ import { collectUrls } from './url-collector.js';
 import { autoScale } from './autoscaler.js';
 import { embedding } from './embedding.js';
 
-export async function executeProcessor(processorName: string, action: string, params: any = {}): Promise<any> {
-  const processors = await db.getProcessors();
-  let processor = processors.find((p: any) => p.name === processorName);
-  
-  if (!processor) {
-    const byType = processors.find((p: any) => p.type === processorName && p.enabled);
-    if (byType) {
-      processor = byType;
-    } else {
-      throw new Error(`Processor not found: ${processorName}`);
-    }
-  }
-  
-  if (!processor.enabled) {
-    console.log(`⏭️  Skipping disabled processor: ${processorName}`);
-    return;
-  }
+interface CachedGlobalConfig {
+  fetchedAt: number;
+  processors: any[];
+  globalCfg: any;
+}
 
-  const globalPageLoadCfg = (await db.getConfiguration('page_load'))?.value || {};
-  const globalScrapingCfg = (await db.getConfiguration('scraping_defaults'))?.value || {};
-  const globalDebugCfg = (await db.getConfiguration('debug'))?.value || {};
-  const dupConfigRow = await db.getConfiguration('duplicate_prevention');
-  let globalDupCfg: any = dupConfigRow?.value || null;
+let cachedGlobal: CachedGlobalConfig | null = null;
+const GLOBAL_CACHE_TTL_MS = 5000; // 5s; config rarely changes
+
+async function loadGlobalConfig(force = false): Promise<CachedGlobalConfig> {
+  const now = Date.now();
+  if (!force && cachedGlobal && (now - cachedGlobal.fetchedAt) < GLOBAL_CACHE_TTL_MS) {
+    return cachedGlobal;
+  }
+  const [processors, pageLoadRow, scrapingRow, debugRow, dupRow] = await Promise.all([
+    db.getProcessors(),
+    db.getConfiguration('page_load'),
+    db.getConfiguration('scraping_defaults'),
+    db.getConfiguration('debug'),
+    db.getConfiguration('duplicate_prevention'),
+  ]);
+  let globalDupCfg: any = dupRow?.value || null;
   if (!globalDupCfg) {
     const dotKeys = [
       'duplicate_prevention.enabled',
       'duplicate_prevention.check_url',
       'duplicate_prevention.check_title_hash',
-      'duplicate_prevention.check_content_hash'
+      'duplicate_prevention.check_content_hash',
     ];
     const entries: Record<string, any> = {};
-    for (const k of dotKeys) {
+    await Promise.all(dotKeys.map(async (k) => {
       try {
         const r = await db.getConfiguration(k);
         if (r && r.value !== undefined && r.value !== null) {
-          const vRaw = r.value;
-          let v: any = vRaw;
-          if (typeof vRaw === 'string') {
-            const l = vRaw.toLowerCase();
+          let v: any = r.value;
+          if (typeof v === 'string') {
+            const l = v.toLowerCase();
             if (l === 'true' || l === 'false') {
               v = l === 'true';
             } else {
-              try { v = JSON.parse(vRaw); } catch { v = vRaw; }
+              try { v = JSON.parse(v); } catch { v = r.value; }
             }
           }
-          const prop = k.split('.').slice(1).join('_');
-          entries[prop] = v;
+          entries[k.split('.').slice(1).join('_')] = v;
         }
       } catch {}
-    }
+    }));
     globalDupCfg = Object.keys(entries).length ? entries : null;
   }
+  const pageLoadCfg = pageLoadRow?.value || {};
+  const scrapingCfg = scrapingRow?.value || {};
+  const debugCfg = debugRow?.value || {};
+  cachedGlobal = {
+    fetchedAt: now,
+    processors,
+    globalCfg: { pageLoadCfg, scrapingCfg, debugCfg, globalDupCfg },
+  };
+  return cachedGlobal;
+}
+
+export function invalidateConfigCache(): void {
+  cachedGlobal = null;
+}
+
+export async function executeProcessor(processorName: string, action: string, params: any = {}): Promise<any> {
+  const { processors, globalCfg } = await loadGlobalConfig();
+  let processor = processors.find((p: any) => p.name === processorName);
+  if (!processor) {
+    const byType = processors.find((p: any) => p.type === processorName && p.enabled);
+    if (byType) processor = byType;
+    else throw new Error(`Processor not found: ${processorName}`);
+  }
+  if (!processor.enabled) {
+    console.log(`⏭️  Skipping disabled processor: ${processorName}`);
+    return;
+  }
+
+  const { pageLoadCfg, scrapingCfg, debugCfg, globalDupCfg } = globalCfg;
   const mergedConfig = {
-    ...globalPageLoadCfg,
-    ...globalScrapingCfg,
-    ...globalDebugCfg,
+    ...pageLoadCfg,
+    ...scrapingCfg,
+    ...debugCfg,
     ...processor.config,
     page_load: {
-      ...(globalPageLoadCfg?.page_load || globalPageLoadCfg || {}),
+      ...(pageLoadCfg?.page_load || pageLoadCfg || {}),
       ...(processor.config?.page_load || {})
     },
     scraping: {
-      ...(globalScrapingCfg?.scraping || globalScrapingCfg || {}),
+      ...(scrapingCfg?.scraping || scrapingCfg || {}),
       ...(processor.config?.scraping || {})
     },
     debug: {
-      ...(globalDebugCfg?.debug || globalDebugCfg || {}),
+      ...(debugCfg?.debug || debugCfg || {}),
       ...(processor.config?.debug || {})
     },
     duplicate_prevention: {
@@ -81,7 +107,7 @@ export async function executeProcessor(processorName: string, action: string, pa
       ...(processor.config?.duplicate_prevention || {})
     }
   };
-  
+
   switch (processor.type) {
     case 'scraper':
       return scrape(action, params, mergedConfig);

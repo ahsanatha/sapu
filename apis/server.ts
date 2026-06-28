@@ -21,33 +21,53 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app: Express = express();
-app.use(express.json());
+app.use(express.json({
+  limit: '256kb',
+  verify: (req: any, _res, buf) => { req.rawBody = buf.toString('utf8'); },
+}));
 // Disable ETag for API responses to avoid 304 on dynamic data
 app.set('etag', false);
+app.disable('x-powered-by');
 
 const clean = (s?: string) => String(s || '').trim().replace(/^['"`]+|['"`]+$/g, '');
-const ADMIN_PASSWORD = clean(process.env.ADMIN_PASSWORD || process.env.VITE_ADMIN_PASSWORD || '');
+const ADMIN_PASSWORD = clean(process.env.ADMIN_PASSWORD || '');
 const ADMIN_PASSWORD_MISSING = !ADMIN_PASSWORD;
 const MAX_SKEW_MS = Math.max(30000, Number(process.env.ADMIN_AUTH_MAX_SKEW_MS ?? 300000)); // default 5 minutes
+
+function timingSafeEqualHex(a: string, b: string): boolean {
+  if (typeof a !== 'string' || typeof b !== 'string' || a.length !== b.length) return false;
+  try {
+    return crypto.timingSafeEqual(Buffer.from(a, 'hex'), Buffer.from(b, 'hex'));
+  } catch {
+    return false;
+  }
+}
+
 function requireAdmin(req: any, res: any, next: any) {
   try {
     if (ADMIN_PASSWORD_MISSING) {
       return res.status(503).json({ error: 'ADMIN_PASSWORD is not configured on the server' });
     }
-    const tsHeader = String(req.headers['x-admin-ts'] || req.query.ts || '');
-    const sigHeader = String(req.headers['x-admin-auth'] || req.query.sig || '');
+    const tsHeader = String(req.headers['x-admin-ts'] || '');
+    const sigHeader = String(req.headers['x-admin-auth'] || '');
+    if (!tsHeader || !sigHeader) {
+      return res.status(401).json({ error: 'invalid admin credentials' });
+    }
 
     const now = Date.now();
     const ts = Number(tsHeader);
-    if (!ts || Math.abs(now - ts) > MAX_SKEW_MS) {
+    if (!Number.isFinite(ts) || Math.abs(now - ts) > MAX_SKEW_MS) {
       return res.status(401).json({ error: 'invalid admin credentials' });
     }
 
     const method = (req.method || 'GET').toUpperCase();
-    const pathOnly = String(req.path || req.url || '/');
-    const msg = `${ts}:${method}:${pathOnly}`;
+    const rawUrl = String(req.originalUrl || req.url || '/');
+    const pathOnly = rawUrl.split('?')[0] || '/';
+    const queryString = rawUrl.includes('?') ? rawUrl.slice(rawUrl.indexOf('?') + 1) : '';
+    const bodyHash = crypto.createHash('sha256').update(req.rawBody || '').digest('hex');
+    const msg = `${ts}:${method}:${pathOnly}:${queryString}:${bodyHash}`;
     const h = crypto.createHmac('sha256', ADMIN_PASSWORD).update(msg).digest('hex');
-    if (h !== sigHeader) {
+    if (!timingSafeEqualHex(h, sigHeader)) {
       return res.status(401).json({ error: 'invalid admin credentials' });
     }
     return next();
@@ -61,13 +81,30 @@ const PUBLIC_DIR = fs.existsSync(path.join(__dirname, '../public/index.html'))
   : path.join(__dirname, '../../public');
 const ADMIN_DIR = path.join(PUBLIC_DIR, 'admin');
 
+const CORS_ALLOWED_ORIGINS = String(process.env.CORS_ORIGIN || '')
+  .split(',')
+  .map((s) => s.trim())
+  .filter(Boolean);
+
 app.use(express.static(PUBLIC_DIR));
 app.use((req: any, res: any, next: any) => {
   try {
-    const allowOrigin = String(process.env.CORS_ORIGIN || '*');
-    res.setHeader('Access-Control-Allow-Origin', allowOrigin);
-    res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-admin-auth, x-admin-ts');
+    const origin = String(req.headers.origin || '');
+    let allowOrigin = '';
+    if (CORS_ALLOWED_ORIGINS.length === 0) {
+      allowOrigin = '';
+    } else if (CORS_ALLOWED_ORIGINS.includes('*')) {
+      allowOrigin = '*';
+    } else if (CORS_ALLOWED_ORIGINS.includes(origin)) {
+      allowOrigin = origin;
+    }
+    if (allowOrigin) {
+      res.setHeader('Access-Control-Allow-Origin', allowOrigin);
+      res.setHeader('Vary', 'Origin');
+      res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
+      // Admin headers only exposed when CORS is explicitly enabled and origin is allowed.
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-admin-auth, x-admin-ts');
+    }
     if (req.method === 'OPTIONS') return res.sendStatus(204);
   } catch {}
   next();
@@ -340,8 +377,8 @@ app.post('/api/workflows/:id/trigger', requireAdmin, async (req, res) => {
   }
 });
 
-// Site endpoints
-app.get('/api/sites', async (req, res) => {
+// Site endpoints (requireAdmin: site configs may contain auth headers)
+app.get('/api/sites', requireAdmin, async (req, res) => {
   try {
     const enabled = req.query.enabled === 'true' ? true : req.query.enabled === 'false' ? false : undefined;
     const sites = await listSites(enabled);
@@ -354,7 +391,7 @@ app.get('/api/sites', async (req, res) => {
   }
 });
 
-app.get('/api/sites/:id', async (req, res) => {
+app.get('/api/sites/:id', requireAdmin, async (req, res) => {
   try {
     const site = await getSiteFromFiles(req.params.id);
     if (!site) return res.status(404).json({ error: 'Site not found' });
@@ -364,13 +401,13 @@ app.get('/api/sites/:id', async (req, res) => {
   }
 });
 
-// Article endpoints
-app.get('/api/articles', async (req, res) => {
+// Article endpoints (requireAdmin: full table scan + cross-site intel)
+app.get('/api/articles', requireAdmin, async (req, res) => {
   try {
     const q = (req.query.q as string | undefined) || undefined;
     const siteId = (req.query.site_id as string | undefined) || undefined;
-    const limit = Number(req.query.limit) || 50;
-    const offset = Number(req.query.offset) || 0;
+    const limit = Math.min(200, Math.max(1, Number(req.query.limit) || 50));
+    const offset = Math.max(0, Number(req.query.offset) || 0);
 
     const items = await db.getArticles({ q, site_id: siteId, limit, offset });
     try { console.log(`[api] /articles q=${q ?? ''} site=${siteId ?? ''} limit=${limit} offset=${offset} count=${items.length}`); } catch {}
@@ -453,7 +490,7 @@ app.post('/api/articles', requireAdmin, async (req, res) => {
   }
 });
 
-app.get('/api/articles/check/:url', async (req, res) => {
+app.get('/api/articles/check/:url', requireAdmin, async (req, res) => {
   try {
     const exists = await db.articleExists(decodeURIComponent(req.params.url));
     res.json({ exists, url: req.params.url });
@@ -484,7 +521,6 @@ app.get('/api/events/stream', requireAdmin, async (req, res) => {
   res.write(':ok\n\n');
 
   let closed = false;
-  let _lastEventTime = new Date();
 
   const send = (type: string, payload: any) => {
     try {
@@ -547,7 +583,6 @@ app.get('/api/events/stream', requireAdmin, async (req, res) => {
     if (closed) return;
     try {
       send('event', ev);
-      _lastEventTime = new Date();
     } catch {
       // ignore write errors; cleanup will handle
     }
@@ -730,18 +765,26 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`🌐 API server running on port ${PORT}`);
   if (ADMIN_PASSWORD_MISSING) {
-    console.error('⚠️ ADMIN_PASSWORD missing. Set ADMIN_PASSWORD or VITE_ADMIN_PASSWORD on the server runtime environment. Admin endpoints will return an error until configured.');
+    console.error('⚠️ ADMIN_PASSWORD missing. Set ADMIN_PASSWORD on the server runtime environment. Admin endpoints will return 503 until configured.');
   }
 });
 
 export { app };
 
-app.post('/api/worker/heartbeat', (req, res) => {
+// Worker endpoints (requireAdmin: prevent heartbeat spoofing + memory pollution)
+const WORKER_ID_PATTERN = /^[a-zA-Z0-9._:-]{1,64}$/;
+const EVENT_TYPE_PATTERN = /^[a-z][a-z0-9_.]{0,63}$/;
+
+app.post('/api/worker/heartbeat', requireAdmin, (req, res) => {
   try {
     const hb = req.body || {};
     const id = String(hb.worker_id || '').trim();
-    if (!id) return res.status(400).json({ error: 'worker_id required' });
-    workerHeartbeats.set(id, { ts: Date.now(), data: hb });
+    if (!id || !WORKER_ID_PATTERN.test(id)) {
+      return res.status(400).json({ error: 'worker_id invalid' });
+    }
+    // Cap stored data size to prevent memory exhaustion
+    const safeData = JSON.stringify(hb).slice(0, 8192);
+    workerHeartbeats.set(id, { ts: Date.now(), data: JSON.parse(safeData) });
     res.json({ ok: true });
   } catch (e) {
     res.status(500).json({ error: e instanceof Error ? e.message : String(e) });
@@ -754,14 +797,25 @@ app.get('/api/workers', requireAdmin, (_req, res) => {
   for (const [id, rec] of workerHeartbeats) {
     if ((now - rec.ts) <= HEARTBEAT_TTL_MS) items.push({ id, last_seen_ms: now - rec.ts, ...rec.data });
   }
+  // Sweep expired entries so the map doesn't grow unbounded
+  for (const [id, rec] of workerHeartbeats) {
+    if ((now - rec.ts) > HEARTBEAT_TTL_MS) workerHeartbeats.delete(id);
+  }
   res.json({ items, count: items.length, ttl_ms: HEARTBEAT_TTL_MS });
 });
 
-app.post('/api/worker/event', (req, res) => {
+app.post('/api/worker/event', requireAdmin, (req, res) => {
   try {
     const { worker_id, status, data, type } = req.body || {};
+    if (worker_id && !WORKER_ID_PATTERN.test(String(worker_id))) {
+      return res.status(400).json({ error: 'worker_id invalid' });
+    }
+    const safeType = type ? String(type) : 'worker.activity';
+    if (!EVENT_TYPE_PATTERN.test(safeType)) {
+      return res.status(400).json({ error: 'type invalid' });
+    }
     const src = worker_id ? `worker:${worker_id}` : undefined;
-    publish({ type: type || 'worker.activity', source: src, status, data });
+    publish({ type: safeType, source: src, status, data });
     res.json({ ok: true });
   } catch (e) {
     res.status(500).json({ error: e instanceof Error ? e.message : String(e) });
