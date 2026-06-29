@@ -235,33 +235,6 @@ class Database {
     return site as any;
   }
 
-  async saveSite(site: Omit<Site, 'id'> | Site): Promise<string> {
-    // Serialize JSON config for PostgreSQL json/jsonb column
-    const configJson = typeof site.config === 'string'
-      ? site.config
-      : JSON.stringify(site.config ?? {});
-    if ('id' in site && site.id) {
-      // Update existing
-      await this.pool.query(`
-        UPDATE sites SET name = $1, base_url = $2, config = $3, enabled = $4
-        WHERE id = $5
-      `, [site.name, site.base_url, configJson, site.enabled, site.id]);
-      return site.id;
-    } else {
-      // Create new
-      const result = await this.pool.query(`
-        INSERT INTO sites (name, base_url, config, enabled)
-        VALUES ($1, $2, $3, $4)
-        RETURNING id
-      `, [site.name, site.base_url, configJson, site.enabled]);
-      return result.rows[0].id;
-    }
-  }
-
-  async deleteSite(id: string): Promise<void> {
-    await this.pool.query('DELETE FROM sites WHERE id = $1', [id]);
-  }
-
   // Article operations
   async saveArticle(article: Omit<Article, 'id'>): Promise<string> {
     // Serialize metadata if provided; allow NULL when metadata is undefined
@@ -300,36 +273,6 @@ class Database {
       [unique]
     );
     return new Set(result.rows.map((r: any) => String(r.url)));
-  }
-
-  async findDuplicateArticles(url?: string, title?: string): Promise<Article[]> {
-    // Fast path if neither url nor title provided
-    if (!url && !title) return [];
-
-    const queries: string[] = [];
-    const params: any[] = [];
-
-    // Prefer indexed URL check; title check uses direct equality
-    if (url) {
-      params.push(url);
-      queries.push(`SELECT * FROM articles WHERE url = $${params.length}`);
-    }
-    if (title) {
-      params.push(title);
-      queries.push(`SELECT * FROM articles WHERE title = $${params.length}`);
-    }
-
-    const sql = queries.join(' UNION ALL ');
-    const result = await this.pool.query(sql, params);
-    const seen = new Set<string>();
-    const deduped: Article[] = [];
-    for (const row of result.rows) {
-      if (!seen.has(row.id)) {
-        seen.add(row.id);
-        deduped.push(row);
-      }
-    }
-    return deduped;
   }
 
   // Scheduled index (DB-backed dedup) operations

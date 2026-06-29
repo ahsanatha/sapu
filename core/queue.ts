@@ -402,14 +402,6 @@ class Queue {
 // Export singleton instance
 export const queue = new Queue();
 
-// Helper getter for current prefetch (worker capacity)
-export function getCurrentPrefetch(): number {
-  // Access through instance; maintained in Queue
-  // This function exposes the current prefetch for status reporting without breaking encapsulation
-  // @ts-ignore
-  return (queue as any).currentPrefetch ?? 1;
-}
-
 // Helper to expose per-queue prefetch map for monitoring
 export function getPrefetchMap(): Record<string, number> {
   // @ts-ignore

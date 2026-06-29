@@ -622,6 +622,9 @@ app.get('/api/scrape', requireAdmin, async (req, res) => {
     } catch {
       return res.status(400).json({ error: 'Invalid URL format' });
     }
+    try { assertNotSSRF(url); } catch (e: any) {
+      return res.status(400).json({ error: e.message });
+    }
 
     let site: any = undefined;
     if (siteId) {
@@ -659,6 +662,9 @@ app.get('/api/html', requireAdmin, async (req, res) => {
     if (!url) {
       return res.status(400).json({ error: 'Missing required query param: url' });
     }
+    try { assertNotSSRF(url); } catch (e: any) {
+      return res.status(400).json({ error: e.message });
+    }
 
     let site: any = undefined;
     if (siteId) {
@@ -686,6 +692,9 @@ app.get('/api/collect-urls', requireAdmin, async (req, res) => {
 
     if (!url) {
       return res.status(400).json({ error: 'Missing required query param: url' });
+    }
+    try { assertNotSSRF(url); } catch (e: any) {
+      return res.status(400).json({ error: e.message });
     }
 
     let site: any = undefined;
@@ -760,11 +769,46 @@ app.listen(PORT, () => {
   }
 });
 
+// Periodic heartbeat cleanup so the map never grows unbounded
+setInterval(() => {
+  const now = Date.now();
+  for (const [id, rec] of workerHeartbeats) {
+    if ((now - rec.ts) > HEARTBEAT_TTL_MS) workerHeartbeats.delete(id);
+  }
+}, Math.max(10000, HEARTBEAT_TTL_MS));
+
 export { app };
 
 // Worker endpoints (requireAdmin: prevent heartbeat spoofing + memory pollution)
 const WORKER_ID_PATTERN = /^[a-zA-Z0-9._:-]{1,64}$/;
 const EVENT_TYPE_PATTERN = /^[a-z][a-z0-9_.]{0,63}$/;
+
+// SSRF protection: block private/link-local/cloud-metadata IPs
+function isPrivateOrReservedHost(hostname: string): boolean {
+  const h = hostname.toLowerCase();
+  if (h === 'localhost' || h === '0.0.0.0' || h === '::1' || h === '[::1]') return true;
+  // IPv4 private ranges
+  if (/^(10\.|172\.(1[6-9]|2\d|3[01])\.|192\.168\.|127\.)/.test(h)) return true;
+  // Link-local
+  if (/^(169\.254\.|169\.255\.|fe80:|fc00:|fd00:)/.test(h)) return true;
+  // Cloud metadata
+  if (h === '169.254.169.254' || h === 'metadata.google.internal') return true;
+  return false;
+}
+
+function assertNotSSRF(url: string): void {
+  try {
+    const u = new URL(url);
+    if (!['http:', 'https:'].includes(u.protocol)) {
+      throw new Error('Only HTTP/HTTPS URLs are allowed');
+    }
+    if (isPrivateOrReservedHost(u.hostname)) {
+      throw new Error('Private/reserved network addresses are not allowed');
+    }
+  } catch (e: any) {
+    throw new Error(`Invalid URL: ${e.message}`);
+  }
+}
 
 app.post('/api/worker/heartbeat', requireAdmin, (req, res) => {
   try {
@@ -811,9 +855,4 @@ app.post('/api/worker/event', requireAdmin, (req, res) => {
   } catch (e) {
     res.status(500).json({ error: e instanceof Error ? e.message : String(e) });
   }
-});
-
-// Root SPA route
-app.get('/', (_req, res) => {
-  res.sendFile(path.join(__dirname, '../public/index.html'));
 });

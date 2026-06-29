@@ -121,14 +121,6 @@ export function resolvePatterns(site: Site, global: any) {
   return { follow, exclude };
 }
 
-export function resolveRobots(site: Site, _global: any) {
-  const uc = site?.config?.url_collection || {};
-  return {
-    respect_robots_txt: Boolean(uc.respect_robots_txt),
-    robots_disallow_patterns: Array.isArray(uc.robots_disallow_patterns) ? uc.robots_disallow_patterns : []
-  };
-}
-
 export function resolveLimits(site: Site, _global: any) {
   const uc = site?.config?.url_collection || {};
   return {

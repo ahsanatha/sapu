@@ -44,12 +44,6 @@ export async function listSites(enabled?: boolean): Promise<any[]> {
   return items.filter((s) => !!s.enabled === !!enabled);
 }
 
-// Test helper: invalidate cache (used by init scripts when files change)
-export function _invalidateSitesCache(): void {
-  cache.clear();
-  cacheDirMtimeMs = 0;
-}
-
 function hostOf(url: string): string {
   try {
     return new URL(url).hostname.replace(/^www\./, '').toLowerCase();

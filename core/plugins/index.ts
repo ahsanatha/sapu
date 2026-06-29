@@ -66,10 +66,6 @@ async function loadGlobalConfig(force = false): Promise<CachedGlobalConfig> {
   return cachedGlobal;
 }
 
-export function invalidateConfigCache(): void {
-  cachedGlobal = null;
-}
-
 export async function executeProcessor(processorName: string, action: string, params: any = {}): Promise<any> {
   const { processors, globalCfg } = await loadGlobalConfig();
   let processor = processors.find((p: any) => p.name === processorName);
