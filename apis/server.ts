@@ -217,7 +217,11 @@ app.get('/api/configurations/:key', requireAdmin, async (req, res) => {
 
 app.post('/api/configurations', requireAdmin, async (req, res) => {
   try {
-    await db.setConfiguration(req.body.key, req.body.value, req.body.category, req.body.description);
+    const body = req.body || {};
+    if (!body.key || body.value === undefined) {
+      return res.status(400).json({ error: 'Missing required fields: key, value' });
+    }
+    await db.setConfiguration(body.key, body.value, body.category, body.description);
     res.json({ created: true, key: req.body.key });
   } catch (error) {
     res.status(500).json({ error: error instanceof Error ? error.message : String(error) });
@@ -287,7 +291,12 @@ app.put('/api/processors/:id', requireAdmin, async (req, res) => {
     if (!existing) {
       return res.status(404).json({ error: 'Processor not found' });
     }
-    const payload: any = { ...existing, ...req.body, id: req.params.id };
+    const body = req.body || {};
+    const allowed = ['name', 'type', 'enabled', 'config'];
+    const payload: any = { ...existing, id: req.params.id };
+    for (const k of allowed) {
+      if (body[k] !== undefined) payload[k] = body[k];
+    }
     await db.saveProcessor(payload);
     res.json({ updated: true, id: req.params.id });
   } catch (error) {
@@ -348,7 +357,12 @@ app.put('/api/workflows/:id', requireAdmin, async (req, res) => {
     if (!existing) {
       return res.status(404).json({ error: 'Workflow not found' });
     }
-    const payload: any = { ...existing, ...req.body, id: req.params.id };
+    const body = req.body || {};
+    const allowed = ['name', 'description', 'enabled', 'steps'];
+    const payload: any = { ...existing, id: req.params.id };
+    for (const k of allowed) {
+      if (body[k] !== undefined) payload[k] = body[k];
+    }
     await db.saveWorkflow(payload);
     res.json({ updated: true, id: req.params.id });
   } catch (error) {
@@ -483,7 +497,13 @@ app.post('/api/articles', requireAdmin, async (req, res) => {
     if (!body.url) {
       return res.status(400).json({ error: 'Missing required field: url' });
     }
-    const articleId = await db.saveArticle(body);
+    const articleId = await db.saveArticle({
+      url: String(body.url),
+      title: body.title ? String(body.title) : undefined as any,
+      content: body.content ? String(body.content) : undefined as any,
+      site_id: body.site_id ? String(body.site_id) : undefined as any,
+      metadata: body.metadata && typeof body.metadata === 'object' ? body.metadata : undefined as any,
+    } as any);
     res.json({ id: articleId, created: true });
   } catch (error) {
     res.status(500).json({ error: error instanceof Error ? error.message : String(error) });
@@ -494,16 +514,6 @@ app.get('/api/articles/check/:url', requireAdmin, async (req, res) => {
   try {
     const exists = await db.articleExists(decodeURIComponent(req.params.url));
     res.json({ exists, url: req.params.url });
-  } catch (error) {
-    res.status(500).json({ error: error instanceof Error ? error.message : String(error) });
-  }
-});
-
-// Event endpoints
-app.get('/api/events', requireAdmin, async (req, res) => {
-  try {
-    // Events removed from DB; return empty list
-    res.json([]);
   } catch (error) {
     res.status(500).json({ error: error instanceof Error ? error.message : String(error) });
   }
@@ -607,6 +617,11 @@ app.get('/api/scrape', requireAdmin, async (req, res) => {
     if (!url) {
       return res.status(400).json({ error: 'Missing required query param: url' });
     }
+    try {
+      new URL(url);
+    } catch {
+      return res.status(400).json({ error: 'Invalid URL format' });
+    }
 
     let site: any = undefined;
     if (siteId) {
@@ -644,30 +659,6 @@ app.get('/api/html', requireAdmin, async (req, res) => {
     if (!url) {
       return res.status(400).json({ error: 'Missing required query param: url' });
     }
-
-    let site: any = undefined;
-    if (siteId) {
-      site = await getSiteFromFiles(siteId);
-      if (!site) return res.status(404).json({ error: 'Site not found', site_id: siteId });
-    } else {
-      site = await findSiteByUrlHost(url);
-    }
-
-    const result = await executeProcessor('scraper', 'get_html', { url, site, dump_to_file: dumpToFile });
-    res.json({ ok: true, site: site?.name, result });
-  } catch (error) {
-    res.status(500).json({ error: error instanceof Error ? error.message : String(error) });
-  }
-});
-
-// Alias for get_html to match external consumers
-app.get('/api/get_html', requireAdmin, async (req, res) => {
-  try {
-    const url = req.query.url as string;
-    const siteId = req.query.site_id as string | undefined;
-    const dumpFlag = (req.query.dump as string | undefined)?.toLowerCase();
-    const dumpToFile = dumpFlag === 'true' || dumpFlag === 'yes' || dumpFlag === '1';
-    if (!url) return res.status(400).json({ error: 'Missing required query param: url' });
 
     let site: any = undefined;
     if (siteId) {

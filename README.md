@@ -21,7 +21,7 @@ Most scrapers accumulate abstractions: workers, queues, classifiers, schedulers,
 
 Three things drove the design:
 
-1. **Configuration over code** — site rules, processor definitions, URL patterns live in the database as JSON. Add a new site by inserting a row, not by shipping a commit.
+1. **Configuration over code** — site rules, processor definitions, URL patterns live in the database as JSON. Add a new site by adding a JSON file to `config/sites/`.
 2. **Stealth by default** — puppeteer-extra with the stealth plugin, automatic resource blocking (images, CSS, fonts), and per-site timeouts.
 3. **Schedule-aware** — every site gets its own cron. The scheduler re-reads its own config at runtime.
 
@@ -67,8 +67,8 @@ Requires Node 22+, pnpm 10+, Postgres 15+, RabbitMQ 3.13+.
 └──────────┬──────────┘
            ↓
 ┌─────────────────────┐         ┌──────────────────┐
-│  Postgres           │  ←────  │  Admin panel     │  Next.js + TanStack
-│  - sites            │         │  (port 4321)     │
+│  Postgres           │  ←────  │  Admin panel     │  React + Vite
+│  - articles         │         │  (port 4321)     │
 │  - processors       │         └──────────────────┘
 │  - url_patterns     │
 │  - articles         │
@@ -84,7 +84,7 @@ Requires Node 22+, pnpm 10+, Postgres 15+, RabbitMQ 3.13+.
 | ⏰ **Multi-scheduler** | per-site cron, hot-reloadable, validated |
 | 📈 **Auto-scaling workers** | queue-depth + utilization based, cooldown-bounded |
 | 🐰 **RabbitMQ** | durable exchange, per-queue prefetch, DLQ |
-| ⚙️ **Site configs** | JSON in DB; add sites by inserting rows |
+| ⚙️ **Site configs** | JSON files in `config/sites/`; add sites by dropping a file |
 | 🎯 **Smart discovery** | classification-filtered URL discovery |
 | 🔔 **Telegram notifications** | per-event fanout (optional) |
 
@@ -95,9 +95,9 @@ Requires Node 22+, pnpm 10+, Postgres 15+, RabbitMQ 3.13+.
 | Method | Path | Purpose |
 |---|---|---|
 | `GET` | `/health` | Health check + feature status |
-| `GET` | `/articles` | List articles with classification filter |
-| `POST` | `/scrape` | Queue a single URL |
-| `POST` | `/seed` | Queue all configured sites |
+| `GET` | `/api/articles` | List articles with classification filter |
+| `GET` | `/api/scrape` | Queue a single URL |
+| `GET` | `/api/stories` | Story clusters via pgvector KNN |
 
 ### URL classification
 
@@ -111,8 +111,8 @@ Requires Node 22+, pnpm 10+, Postgres 15+, RabbitMQ 3.13+.
 
 | Method | Path | Purpose |
 |---|---|---|
-| `GET` | `/scheduler` | Scheduler status + schedules |
-| `GET` | `/scaler` | Auto-scaler stats |
+| `GET` | `/api/status` | System status + queue depth |
+| `GET` | `/api/events/stream` | Real-time SSE monitoring |
 
 ## Database schema
 
@@ -121,8 +121,7 @@ The schema (`schema.sql`) is configuration-as-data:
 | Table | Role |
 |---|---|
 | `configurations` | Generic key/value JSON (env-driven config) |
-| `processors` | Worker, scheduler, telegram definitions |
-| `sites` | Per-site scrape config (cron, timeout, concurrency) |
+| `processors` | Worker, notifier definitions |
 | `url_classification_patterns` | Regex → classification, with confidence |
 | `articles` | Scraped articles with classification + scoring |
 | `worker_stats` | Heartbeat + throughput per worker |
@@ -138,24 +137,12 @@ All runtime config via `.env`:
 DATABASE_URL=postgresql://postgres@localhost:5432/sapu
 RABBITMQ_URL=amqp://sapu:sapu123@localhost:5672/sapu
 
-# Scraping
-HEADLESS=true
-STEALTH_MODE=true
-TIMEOUT=30000
-CONCURRENT_JOBS=5
+# Embeddings (via OpenRouter)
+OPENROUTER_API_KEY=sk-or-v1-your-key-here
+OPENROUTER_EMBEDDING_MODEL=openai/text-embedding-3-large
 
-# Scheduler
-SCHEDULER_ENABLED=true
-DEFAULT_CRON=0 */6 * * *
-
-# Auto-scaling
-AUTO_SCALE_ENABLED=true
-AUTO_SCALE_MIN_WORKERS=1
-AUTO_SCALE_MAX_WORKERS=5
-
-# Admin auth (used as cookie name + bearer token)
+# Admin auth (HMAC signature)
 ADMIN_PASSWORD=sapu123
-ADMIN_ACCESS_TOKEN=change-me-in-env
 
 # Telegram (optional)
 TELEGRAM_ENABLED=false
@@ -165,14 +152,13 @@ TELEGRAM_ENABLED=false
 
 | Layer | Technology |
 |---|---|
-| API | Node.js 22, TypeScript 5, Fastify-style HTTP |
+| API | Node.js 22, TypeScript 5, Express 4 |
 | Workers | Node.js 22, puppeteer-extra + stealth, tsx |
-| Database | Postgres 15 |
+| Database | Postgres 15, pgvector |
 | Queue | RabbitMQ 3.13 |
-| Admin | Next.js 15, TanStack Router, TanStack Query |
-| Mobile | React Native (Expo) |
+| Admin | React 19, Vite 5, Tailwind CSS |
 | Cache | Postgres (no Redis — single-source-of-truth principle) |
-| Deploy | Docker Compose |
+| Deploy | Docker Compose (split-VM: control plane + workers) |
 
 ## Honest limits
 

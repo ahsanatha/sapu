@@ -2,7 +2,6 @@ import { db } from '../database.js';
 
 import { scrape } from './scraper.js';
 import { notify } from './notifier.js';
-import { schedule } from './scheduler.js';
 import { collectUrls } from './url-collector.js';
 import { autoScale } from './autoscaler.js';
 import { embedding } from './embedding.js';
@@ -113,8 +112,6 @@ export async function executeProcessor(processorName: string, action: string, pa
       return scrape(action, params, mergedConfig);
     case 'notifier':
       return notify(action, params, mergedConfig);
-    case 'scheduler':
-      return schedule(action, params, mergedConfig);
     case 'url_collector':
       return collectUrls(action, params, mergedConfig);
     case 'autoscaler':
