@@ -2,7 +2,7 @@
   "id": "7ae049e0-8f59-4276-8ef6-7413806f3782",
   "name": "ABS-CBN News",
   "base_url": "https://news.abs-cbn.com",
-  "enabled": false,
+  "enabled": true,
   "config": {
     "scraping": {
       "enabled": true,

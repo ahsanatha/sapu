@@ -2,7 +2,7 @@
   "id": "3f00aa2e-29e9-4a9a-8e62-d50df92cc8bc",
   "name": "The Nation Thailand",
   "base_url": "https://www.nationthailand.com",
-  "enabled": false,
+  "enabled": true,
   "config": {
     "scraping": {
       "enabled": true,

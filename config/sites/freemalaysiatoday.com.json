@@ -2,7 +2,7 @@
   "id": "4c5c13a9-4601-47fa-bbaf-ad576e2b42c9",
   "name": "Free Malaysia Today",
   "base_url": "https://www.freemalaysiatoday.com",
-  "enabled": false,
+  "enabled": true,
   "config": {
     "scraping": {
       "timezone": "Asia/Kuala_Lumpur",
@@ -68,7 +68,7 @@
     },
     "classification": {
       "article_patterns": [
-        "regex:^https?://(www\\.)?freemalaysiatoday\\.com/category/(nation|world|business|sports|lifestyle|opinion|columns|property|motoring|tech)/[a-z0-9-]+$"
+        "regex:^https?://(www\\.)?freemalaysiatoday\\.com/category/(nation|world|business|sports|lifestyle|opinion|columns|property|motoring|tech)/"
       ],
       "exclude_patterns": [
         "regex:/video/",

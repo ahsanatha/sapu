@@ -2,7 +2,7 @@
   "id": "5b41e909-daeb-4a68-9a07-de4ba265e0a3",
   "name": "Astro Awani",
   "base_url": "https://www.astroawani.com",
-  "enabled": false,
+  "enabled": true,
   "config": {
     "scraping": {
       "enabled": true,
@@ -15,7 +15,8 @@
         "/news",
         "/article",
         "/story",
-        "/read"
+        "/read",
+        "/berita"
       ],
       "exclude_patterns": [
         "/video",
@@ -32,10 +33,7 @@
         "min_word_count": 150
       },
       "article_patterns": [
-        "/news",
-        "/article",
-        "/read",
-        "/story"
+        "regex:astroawani\\.com/berita(-[a-z]+)?/.+"
       ]
     },
     "url_collection": {

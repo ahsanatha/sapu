@@ -1,0 +1,197 @@
+{
+  "generated_at": "2026-07-07T20:14:51.240Z",
+  "provenance": "gather-proof.ts — reuses Sapu real stealth engine (core/plugins/browser.ts) + real site configs (config/sites/*.json) + pure resolvers (core/config.ts); no Postgres/RabbitMQ",
+  "sites_attempted": 12,
+  "sources_with_articles": 6,
+  "articles_gathered": 12,
+  "successes": 12,
+  "failures": 6,
+  "artifacts": {
+    "articles_jsonl": "/Users/ahsanathallah/home-cleanup/projects/Code2/sapu/data/gathered-proof.jsonl",
+    "summary_json": "/Users/ahsanathallah/home-cleanup/projects/Code2/sapu/data/gathered-proof-summary.json"
+  },
+  "results": [
+    {
+      "site": "Astro Awani",
+      "base_url": "https://www.astroawani.com",
+      "status": "success",
+      "url": "https://www.astroawani.com/berita-malaysia/murid-tahun-lima-cedera-jatuh-tingkat-tiga-sekolah",
+      "title": "Murid tahun lima cedera jatuh tingkat tiga sekolah",
+      "published": "2026-07-07T23:00:29+0800",
+      "content_length": 4745
+    },
+    {
+      "site": "Astro Awani",
+      "base_url": "https://www.astroawani.com",
+      "status": "success",
+      "url": "https://www.astroawani.com/berita-malaysia/berita-tempatan-pilihan-sepanjang-hari-ini-145",
+      "title": "Berita tempatan pilihan sepanjang hari ini",
+      "published": "2026-07-07T12:12:09+0800",
+      "content_length": 6359
+    },
+    {
+      "site": "Bangkok Post",
+      "base_url": "https://www.bangkokpost.com",
+      "status": "thin_content",
+      "url": "https://www.bangkokpost.com/newsletter?click_from=header-",
+      "title": "Newsletter",
+      "content_length": 0
+    },
+    {
+      "site": "Bangkok Post",
+      "base_url": "https://www.bangkokpost.com",
+      "status": "thin_content",
+      "url": "https://www.bangkokpost.com/news",
+      "title": "NEWS",
+      "content_length": 0
+    },
+    {
+      "site": "Channel NewsAsia",
+      "base_url": "https://channelnewsasia.com",
+      "status": "success",
+      "url": "https://www.channelnewsasia.com/singapore/dangerous-driving-jail-drink-alcohol-limit-drugs-parliament-6224456",
+      "title": "Singapore proposes harsher penalties for dangerous driving causing grievous hurt, lower drink-driving limits",
+      "published": null,
+      "content_length": 21204
+    },
+    {
+      "site": "Channel NewsAsia",
+      "base_url": "https://channelnewsasia.com",
+      "status": "success",
+      "url": "https://www.channelnewsasia.com/singapore/mobile-phones-driving-holding-road-traffic-smartwatch-parliament-6226391",
+      "title": "Drivers holding phones while driving may be punished under proposed changes to road traffic law",
+      "published": null,
+      "content_length": 14083
+    },
+    {
+      "site": "detikcom",
+      "base_url": "https://detik.com/",
+      "status": "success",
+      "url": "https://news.detik.com/internasional/d-8564436/kejaksaan-prancis-selidiki-ujaran-rasis-senator-paraguay-ke-mbappe",
+      "title": "Kejaksaan Prancis Selidiki Ujaran Rasis Senator Paraguay ke Mbappe",
+      "published": "2026/07/08 02:47:54",
+      "content_length": 2358
+    },
+    {
+      "site": "detikcom",
+      "base_url": "https://detik.com/",
+      "status": "success",
+      "url": "https://sport.detik.com/sepakbola/bola-dunia/d-8564425/hasil-argentina-vs-mesir-menang-dramatis-3-2-lionel-messi-cs-ke-8-besar",
+      "title": "Hasil Argentina Vs Mesir: Menang Dramatis 3-2, Lionel Messi Cs ke 8 Besar",
+      "published": null,
+      "content_length": 4356
+    },
+    {
+      "site": "VnExpress (English)",
+      "base_url": "https://e.vnexpress.net",
+      "status": "thin_content",
+      "url": "https://e.vnexpress.net/news/news",
+      "title": "News",
+      "content_length": 0
+    },
+    {
+      "site": "VnExpress (English)",
+      "base_url": "https://e.vnexpress.net",
+      "status": "thin_content",
+      "url": "https://e.vnexpress.net/news/news/politics",
+      "title": "Politics",
+      "content_length": 0
+    },
+    {
+      "site": "Free Malaysia Today",
+      "base_url": "https://www.freemalaysiatoday.com",
+      "status": "success",
+      "url": "https://www.freemalaysiatoday.com/category/nation/2026/07/07/higher-voter-turnout-key-to-stronger-johor-mandate-says-maszlee",
+      "title": "Higher voter turnout key to stronger Johor mandate, says Maszlee",
+      "published": "2026-07-07T15:46:41Z",
+      "content_length": 2421
+    },
+    {
+      "site": "Free Malaysia Today",
+      "base_url": "https://www.freemalaysiatoday.com",
+      "status": "success",
+      "url": "https://www.freemalaysiatoday.com/category/business/2026/07/07/stocks-hit-by-ai-concerns-as-oil-rises-on-tanker-attack",
+      "title": "Stocks hit by AI concerns as oil rises on tanker attack",
+      "published": "2026-07-07T14:22:48Z",
+      "content_length": 3734
+    },
+    {
+      "site": "Kompas.com",
+      "base_url": "https://kompas.com/",
+      "status": "success",
+      "url": "https://nasional.kompas.com/read/2026/07/07/21595361/kpk-dalami-dugaan-aliran-uang-bupati-kuansing-ke-menhut-raja-juli?source=headline",
+      "title": "KPK Dalami Dugaan Aliran Uang Bupati Kuansing ke Menhut Raja Juli",
+      "published": "Kompas.com, 7 Juli 2026, 21:59 WIB",
+      "content_length": 6579
+    },
+    {
+      "site": "Kompas.com",
+      "base_url": "https://kompas.com/",
+      "status": "success",
+      "url": "https://bola.kompas.com/read/2026/07/07/21584298/hasil-malaysia-vs-timnas-u17-indonesia-0-3-garuda-muda-sempurna?source=headline",
+      "title": "Hasil Malaysia vs Timnas U17 Indonesia 0-3: Garuda Muda Sempurna",
+      "published": "Kompas.com, 7 Juli 2026, 21:58 WIB",
+      "content_length": 6420
+    },
+    {
+      "site": "Myanmar Times",
+      "base_url": "https://www.mmtimes.com",
+      "status": "no_candidates"
+    },
+    {
+      "site": "The Nation Thailand",
+      "base_url": "https://www.nationthailand.com",
+      "status": "thin_content",
+      "url": "https://www.nationthailand.com/news/world/40068355",
+      "title": "Tornadoes kill 11 in central China as Typhoon Bavi raises flood fears",
+      "content_length": 0
+    },
+    {
+      "site": "The Nation Thailand",
+      "base_url": "https://www.nationthailand.com",
+      "status": "thin_content",
+      "url": "https://www.nationthailand.com/news/tourism/40068348",
+      "title": "Moo Deng turns two with three-day birthday festival at Khao Kheow Open Zoo",
+      "content_length": 0
+    },
+    {
+      "site": "ABS-CBN News",
+      "base_url": "https://news.abs-cbn.com",
+      "status": "thin_content",
+      "url": "https://www.abs-cbn.com/news/nation/2026/7/7/lotto-results-hulyo-7-2026-2250",
+      "title": "LOTTO RESULTS: Hulyo 7, 2026",
+      "content_length": 0
+    },
+    {
+      "site": "ABS-CBN News",
+      "base_url": "https://news.abs-cbn.com",
+      "status": "thin_content",
+      "url": "https://www.abs-cbn.com/news/nation/2026/7/7/house-prosecutors-say-impeachment-reaching-trial-already-a-victory-1923",
+      "title": "House prosecutors say impeachment reaching trial already a 'victory'",
+      "content_length": 0
+    },
+    {
+      "site": "The Straits Times",
+      "base_url": "https://www.straitstimes.com",
+      "status": "no_candidates"
+    },
+    {
+      "site": "Tempo.co",
+      "base_url": "https://www.tempo.co",
+      "status": "success",
+      "url": "https://www.tempo.co/politik/alutisista-sistem-pertahanan-2273981",
+      "title": "Dua Kutub Sistem Pertahanan Kita | tempo.co",
+      "published": "7 Juli 2026 | 09.00 WIB",
+      "content_length": 1342
+    },
+    {
+      "site": "Tempo.co",
+      "base_url": "https://www.tempo.co",
+      "status": "success",
+      "url": "https://www.tempo.co/politik/prabowo-hadiri-acara-diaspora-india-di-senayan-2274231",
+      "title": "Prabowo Hadiri Acara Diaspora India di Senayan | tempo.co",
+      "published": "7 Juli 2026 | 23.11 WIB",
+      "content_length": 3977
+    }
+  ]
+}

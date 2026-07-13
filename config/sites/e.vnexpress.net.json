@@ -2,7 +2,7 @@
   "id": "1d801a49-5c55-4b5a-bd20-cdfb3cf2f086",
   "name": "VnExpress (English)",
   "base_url": "https://e.vnexpress.net",
-  "enabled": false,
+  "enabled": true,
   "config": {
     "scraping": {
       "enabled": true,
@@ -32,10 +32,7 @@
         "min_word_count": 150
       },
       "article_patterns": [
-        "/news",
-        "/article",
-        "/read",
-        "/story"
+        "regex:e\\.vnexpress\\.net/news/.+"
       ]
     },
     "url_collection": {
