@@ -157,6 +157,16 @@ X402_RESOURCE_BASE_URL=https://sapu.rekursa.id
 return x402 v2 payment requirements and expect the `PAYMENT-SIGNATURE` header.
 Successful paid responses include the x402 `PAYMENT-RESPONSE` header.
 
+For deployment, prefer the stateless x402 entrypoint:
+
+```bash
+pnpm build
+pnpm start:x402
+```
+
+This starts `apis/x402-server.ts`, which does not import Postgres, RabbitMQ, or
+the admin UI. Use `Dockerfile.x402` for Railway.
+
 ### Cloudflare Browser Run backend
 
 Cheap browser-priced routes use Cloudflare Browser Run instead of local Chromium:

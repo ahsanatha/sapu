@@ -11,6 +11,8 @@
   "scripts": {
     "build": "tsc",
     "start": "node dist/apis/server.js",
+    "start:x402": "node dist/apis/x402-server.js",
+    "dev:x402": "tsx apis/x402-server.ts",
     "dev": "tsx apis/main.ts",
     "worker": "tsx core/worker.ts",
     "api": "node dist/apis/server.js",

@@ -1,0 +1,40 @@
+FROM node:22.14.0-slim AS builder
+
+WORKDIR /app
+
+COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
+COPY web/package.json ./web/package.json
+COPY . .
+
+RUN corepack enable \
+  && corepack prepare pnpm@10.24.0 --activate \
+  && pnpm -w install --no-frozen-lockfile \
+  && pnpm run build
+
+FROM node:22.14.0-slim AS runtime
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+      chromium \
+      ca-certificates \
+      fonts-liberation && \
+    rm -rf /var/lib/apt/lists/*
+
+ENV NODE_ENV=production \
+    PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
+    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium \
+    PORT=3000
+
+WORKDIR /app
+
+COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
+RUN corepack enable \
+  && corepack prepare pnpm@10.24.0 --activate \
+  && pnpm install --prod --no-frozen-lockfile
+
+COPY --chown=node:node --from=builder /app/dist ./dist
+
+EXPOSE 3000
+
+USER node
+CMD ["node", "dist/apis/x402-server.js"]
