@@ -58,13 +58,23 @@ export const X402_ROUTE_PRICES: Record<string, { price: string; description: str
   },
   'POST /x402/extract/article/browser': {
     price: '$0.018',
-    description: 'Browser-rendered article extraction for JavaScript-heavy pages.',
-    tags: ['article-extraction', 'browser-rendering', 'premium'],
+    description: 'Cheap browser-rendered article extraction for JavaScript-heavy pages through Cloudflare Browser Run.',
+    tags: ['article-extraction', 'browser-rendering', 'cloudflare', 'premium'],
+  },
+  'POST /x402/extract/article/browser/long': {
+    price: '$0.075',
+    description: 'Long-running local browser article extraction for slow or complex pages.',
+    tags: ['article-extraction', 'browser-rendering', 'local-puppeteer', 'long-running'],
   },
   'POST /x402/fetch/browser': {
     price: '$0.015',
-    description: 'Render a JavaScript-heavy page through the browser backend and return HTML metadata.',
-    tags: ['browser-rendering', 'javascript', 'premium'],
+    description: 'Cheap browser-rendered fetch through Cloudflare Browser Run.',
+    tags: ['browser-rendering', 'javascript', 'cloudflare', 'premium'],
+  },
+  'POST /x402/fetch/browser/long': {
+    price: '$0.060',
+    description: 'Long-running local browser fetch for slow or complex pages.',
+    tags: ['browser-rendering', 'javascript', 'local-puppeteer', 'long-running'],
   },
 };
 

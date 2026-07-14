@@ -9,6 +9,7 @@ export interface FetchOptions {
   timeoutMs?: number;
   userAgent?: string;
   mode?: X402ToolMode;
+  browserBackend?: 'local-puppeteer' | 'cloudflare-browser-run';
 }
 
 export interface PriceEstimate {
@@ -25,6 +26,9 @@ const DEFAULT_UA =
 const MAX_HTTP_BYTES = Math.max(64_000, Number(process.env.X402_MAX_HTTP_BYTES ?? 1_500_000));
 const HTTP_TIMEOUT_MS = Math.max(1000, Number(process.env.X402_HTTP_TIMEOUT_MS ?? 8000));
 const BROWSER_TIMEOUT_MS = Math.max(3000, Number(process.env.X402_BROWSER_TIMEOUT_MS ?? 20_000));
+const LOCAL_BROWSER_MAX_TIMEOUT_MS = Math.max(10_000, Number(process.env.X402_LOCAL_BROWSER_MAX_TIMEOUT_MS ?? 120_000));
+const CLOUDFLARE_BROWSER_MAX_TIMEOUT_MS = Math.max(3000, Number(process.env.X402_CLOUDFLARE_BROWSER_MAX_TIMEOUT_MS ?? 45_000));
+const CLOUDFLARE_BROWSER_API_BASE = 'https://api.cloudflare.com/client/v4/accounts';
 
 export function assertPublicHttpUrl(rawUrl: string): URL {
   let parsed: URL;
@@ -223,10 +227,15 @@ export async function extractLinksTool(options: FetchOptions): Promise<any> {
 
 export async function fetchBrowser(options: FetchOptions): Promise<any> {
   const u = assertPublicHttpUrl(options.url);
-  const timeoutMs = Math.min(Math.max(3000, options.timeoutMs ?? BROWSER_TIMEOUT_MS), 45_000);
-  const backend = process.env.SAPU_BROWSER_BACKEND || 'local-puppeteer';
-  // Cloudflare Browser Run can be wired here when credentials/REST shape are finalized.
-  // The public API remains stable: backend reports whether this used Cloudflare or local fallback.
+  const backend = options.browserBackend || process.env.SAPU_BROWSER_BACKEND || 'local-puppeteer';
+  const maxTimeoutMs = backend === 'cloudflare-browser-run' || backend === 'cloudflare-browser-run-rest'
+    ? CLOUDFLARE_BROWSER_MAX_TIMEOUT_MS
+    : LOCAL_BROWSER_MAX_TIMEOUT_MS;
+  const timeoutMs = Math.min(Math.max(3000, options.timeoutMs ?? BROWSER_TIMEOUT_MS), maxTimeoutMs);
+  if (backend === 'cloudflare-browser-run' || backend === 'cloudflare-browser-run-rest') {
+    return fetchCloudflareBrowserRun(u, options, timeoutMs);
+  }
+
   const startedAt = Date.now();
   const { browser, page, isShared } = await createPage({
     page_load: {
@@ -259,6 +268,80 @@ export async function fetchBrowser(options: FetchOptions): Promise<any> {
   }
 }
 
+async function fetchCloudflareBrowserRun(u: URL, options: FetchOptions, timeoutMs: number): Promise<any> {
+  const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
+  const apiToken = process.env.CLOUDFLARE_BROWSER_API_TOKEN || process.env.CLOUDFLARE_API_TOKEN;
+  if (!accountId || !apiToken) {
+    throw new Error('Cloudflare Browser Run requires CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_BROWSER_API_TOKEN');
+  }
+
+  const waitUntil = process.env.CLOUDFLARE_BROWSER_WAIT_UNTIL || 'domcontentloaded';
+  const endpoint = `${CLOUDFLARE_BROWSER_API_BASE}/${accountId}/browser-rendering/content`;
+  const startedAt = Date.now();
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs + 5000);
+
+  try {
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      signal: controller.signal,
+      headers: {
+        authorization: `Bearer ${apiToken}`,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        url: u.toString(),
+        userAgent: options.userAgent || DEFAULT_UA,
+        gotoOptions: {
+          waitUntil,
+          timeout: timeoutMs,
+        },
+        rejectResourceTypes: ['image', 'media', 'font'],
+      }),
+    });
+
+    const contentType = response.headers.get('content-type') || '';
+    const raw = await response.text();
+    let html = raw;
+    let errorMessage = raw.slice(0, 500);
+
+    if (contentType.includes('application/json') || raw.trim().startsWith('{')) {
+      try {
+        const parsed = JSON.parse(raw);
+        html = String(
+          parsed?.result?.content ??
+          parsed?.result?.html ??
+          parsed?.result ??
+          parsed?.content ??
+          parsed?.html ??
+          '',
+        );
+        errorMessage = String(parsed?.errors?.[0]?.message || parsed?.message || errorMessage);
+      } catch {}
+    }
+
+    if (!response.ok) {
+      throw new Error(`Cloudflare Browser Run failed (${response.status}): ${errorMessage}`);
+    }
+
+    return {
+      ok: true,
+      backend: 'cloudflare-browser-run',
+      url: u.toString(),
+      finalUrl: u.toString(),
+      status: response.status,
+      title: extractTitle(html),
+      html,
+      contentHash: sha256(html),
+      elapsedMs: Date.now() - startedAt,
+      cloudflareBrowserMsUsed: Number(response.headers.get('x-browser-ms-used') || 0) || undefined,
+      retrievedAt: new Date().toISOString(),
+    };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 export function estimateCost(endpoint: string, params: any = {}): PriceEstimate {
   const seconds = Math.max(1, Number(params.seconds ?? 8));
   const browserHourCost = Number(process.env.CLOUDFLARE_BROWSER_HOUR_COST_USD ?? 0.09);
@@ -281,12 +364,22 @@ export function estimateCost(endpoint: string, params: any = {}): PriceEstimate 
     'extract-article-browser': {
       price: 0.018,
       cost: (seconds / 3600) * browserHourCost + 0.001,
-      assumptions: [`${seconds}s browser duration`, 'browser-rendered article extraction', `$${browserHourCost}/browser-hour`, 'storage/proxy excluded'],
+      assumptions: [`${seconds}s Cloudflare Browser Run duration`, 'browser-rendered article extraction', `$${browserHourCost}/browser-hour`, 'storage/proxy excluded'],
+    },
+    'extract-article-browser-long': {
+      price: 0.075,
+      cost: 0.01 + (seconds / 3600) * 0.08,
+      assumptions: [`${seconds}s local Puppeteer duration`, 'long-running local browser worker', 'container CPU/RAM amortized', 'storage/proxy excluded'],
     },
     'fetch-browser': {
       price: 0.015,
       cost: (seconds / 3600) * browserHourCost + 0.0003,
-      assumptions: [`${seconds}s browser duration`, `$${browserHourCost}/browser-hour`, 'storage/proxy excluded'],
+      assumptions: [`${seconds}s Cloudflare Browser Run duration`, `$${browserHourCost}/browser-hour`, 'storage/proxy excluded'],
+    },
+    'fetch-browser-long': {
+      price: 0.06,
+      cost: 0.008 + (seconds / 3600) * 0.08,
+      assumptions: [`${seconds}s local Puppeteer duration`, 'long-running local browser worker', 'container CPU/RAM amortized', 'storage/proxy excluded'],
     },
   };
   const e = map[endpoint] || map['extract-article'];

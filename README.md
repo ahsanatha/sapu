@@ -102,8 +102,10 @@ Public endpoints that can be placed behind x402 middleware and priced per route:
 | `POST` | `/x402/fetch/http` | Bounded HTTP fetch | `$0.003` |
 | `POST` | `/x402/extract/links` | Extract links from fetched HTML | `$0.003` |
 | `POST` | `/x402/extract/article` | HTTP-only title/text/link extraction | `$0.005` |
-| `POST` | `/x402/extract/article/browser` | Browser-rendered article extraction | `$0.018` |
-| `POST` | `/x402/fetch/browser` | Browser-rendered fetch | `$0.015+` |
+| `POST` | `/x402/extract/article/browser` | Cheap Cloudflare Browser Run article extraction | `$0.018` |
+| `POST` | `/x402/extract/article/browser/long` | Long-running local browser article extraction | `$0.075` |
+| `POST` | `/x402/fetch/browser` | Cheap Cloudflare Browser Run fetch | `$0.015` |
+| `POST` | `/x402/fetch/browser/long` | Long-running local browser fetch | `$0.060` |
 
 Example:
 
@@ -122,11 +124,16 @@ curl -s http://localhost:3000/x402/extract/article/browser \
   -H 'content-type: application/json' \
   -d '{"url":"https://example.com","includeText":true}'
 
+curl -s http://localhost:3000/x402/extract/article/browser/long \
+  -H 'content-type: application/json' \
+  -d '{"url":"https://example.com","timeoutMs":90000,"includeText":true}'
+
 curl -s 'http://localhost:3000/x402/cost/estimate?endpoint=fetch-browser&seconds=10'
 ```
 
 Operational guardrail: cheap HTTP extraction routes must not launch browser
-rendering. Browser rendering is exposed as separate higher-priced routes.
+rendering. Cheap browser routes use Cloudflare Browser Run. Long-running browser
+routes use local Puppeteer and are priced separately.
 
 ### x402 payment gate
 
@@ -149,6 +156,28 @@ X402_RESOURCE_BASE_URL=https://sapu.rekursa.id
 `GET /x402/health` and `GET /x402/cost/estimate` stay free. The paid routes
 return x402 v2 payment requirements and expect the `PAYMENT-SIGNATURE` header.
 Successful paid responses include the x402 `PAYMENT-RESPONSE` header.
+
+### Cloudflare Browser Run backend
+
+Cheap browser-priced routes use Cloudflare Browser Run instead of local Chromium:
+
+```bash
+CLOUDFLARE_ACCOUNT_ID=...
+CLOUDFLARE_BROWSER_API_TOKEN=...
+CLOUDFLARE_BROWSER_WAIT_UNTIL=domcontentloaded
+X402_CLOUDFLARE_BROWSER_MAX_TIMEOUT_MS=45000
+X402_LOCAL_BROWSER_MAX_TIMEOUT_MS=120000
+```
+
+The implementation calls Cloudflare's Browser Run REST `/content` Quick Action,
+which captures fully rendered HTML after JavaScript execution. Use an API token
+with `Browser Rendering - Edit` permission. The public Sapu response contract
+does not change: browser routes still return `html`, `title`, `contentHash`,
+`elapsedMs`, and `retrievedAt`. When Cloudflare returns it, Sapu also includes
+`cloudflareBrowserMsUsed` for unit-cost tracking.
+
+Use `/x402/fetch/browser/long` or `/x402/extract/article/browser/long` for slow
+pages that need a local long-running browser task.
 
 ### Core
 

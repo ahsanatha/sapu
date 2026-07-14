@@ -155,8 +155,10 @@ app.get('/x402/health', (_req, res) => {
       'POST /x402/classify-url',
       'POST /x402/fetch/http',
       'POST /x402/fetch/browser',
+      'POST /x402/fetch/browser/long',
       'POST /x402/extract/article',
       'POST /x402/extract/article/browser',
+      'POST /x402/extract/article/browser/long',
       'POST /x402/extract/links',
       'GET /x402/cost/estimate',
     ],
@@ -204,6 +206,24 @@ app.post('/x402/fetch/browser', async (req, res) => {
       url: String(req.body?.url || ''),
       timeoutMs: req.body?.timeoutMs,
       userAgent: req.body?.userAgent,
+      browserBackend: 'cloudflare-browser-run',
+    });
+    if (req.body?.includeHtml !== true) {
+      delete result.html;
+    }
+    res.json(result);
+  } catch (error) {
+    res.status(400).json({ error: error instanceof Error ? error.message : String(error) });
+  }
+});
+
+app.post('/x402/fetch/browser/long', async (req, res) => {
+  try {
+    const result = await fetchBrowser({
+      url: String(req.body?.url || ''),
+      timeoutMs: req.body?.timeoutMs,
+      userAgent: req.body?.userAgent,
+      browserBackend: 'local-puppeteer',
     });
     if (req.body?.includeHtml !== true) {
       delete result.html;
@@ -238,6 +258,25 @@ app.post('/x402/extract/article/browser', async (req, res) => {
       mode: 'browser',
       timeoutMs: req.body?.timeoutMs,
       userAgent: req.body?.userAgent,
+      browserBackend: 'cloudflare-browser-run',
+    });
+    if (req.body?.includeText === false) {
+      delete result.text;
+    }
+    res.json(result);
+  } catch (error) {
+    res.status(400).json({ error: error instanceof Error ? error.message : String(error) });
+  }
+});
+
+app.post('/x402/extract/article/browser/long', async (req, res) => {
+  try {
+    const result = await extractArticle({
+      url: String(req.body?.url || ''),
+      mode: 'browser',
+      timeoutMs: req.body?.timeoutMs,
+      userAgent: req.body?.userAgent,
+      browserBackend: 'local-puppeteer',
     });
     if (req.body?.includeText === false) {
       delete result.text;
