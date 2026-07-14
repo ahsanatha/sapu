@@ -16,6 +16,14 @@ import { queue, getPrefetchMap, isQueueConnected } from '../core/queue.js';
 import { subscribe, publish } from '../core/events.js';
 import { executeProcessor } from '../core/plugins/index.js';
 import { listSites, getSite as getSiteFromFiles, findSiteByUrlHost } from '../core/sites.js';
+import {
+  classifyUrl,
+  estimateCost,
+  extractArticle,
+  extractLinksTool,
+  fetchBrowser,
+  fetchHttp,
+} from '../core/x402-tools.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -110,6 +118,106 @@ app.use((req: any, res: any, next: any) => {
   next();
 });
 app.use('/admin', express.static(ADMIN_DIR));
+
+// Public x402-ready stateless extraction endpoints.
+// These intentionally do not use admin auth; production x402 middleware should
+// sit in front of this router and price each route separately.
+app.get('/x402/health', (_req, res) => {
+  res.json({
+    ok: true,
+    service: 'Sapu Extract API',
+    version: '0.1.0',
+    endpoints: [
+      'POST /x402/classify-url',
+      'POST /x402/fetch/http',
+      'POST /x402/fetch/browser',
+      'POST /x402/extract/article',
+      'POST /x402/extract/links',
+      'GET /x402/cost/estimate',
+    ],
+  });
+});
+
+app.get('/x402/cost/estimate', (req, res) => {
+  try {
+    const endpoint = String(req.query.endpoint || 'extract-article');
+    const seconds = req.query.seconds ? Number(req.query.seconds) : undefined;
+    res.json(estimateCost(endpoint, { seconds }));
+  } catch (error) {
+    res.status(400).json({ error: error instanceof Error ? error.message : String(error) });
+  }
+});
+
+app.post('/x402/classify-url', (req, res) => {
+  try {
+    const url = String(req.body?.url || '');
+    res.json(classifyUrl(url));
+  } catch (error) {
+    res.status(400).json({ error: error instanceof Error ? error.message : String(error) });
+  }
+});
+
+app.post('/x402/fetch/http', async (req, res) => {
+  try {
+    const result = await fetchHttp({
+      url: String(req.body?.url || ''),
+      timeoutMs: req.body?.timeoutMs,
+      userAgent: req.body?.userAgent,
+    });
+    if (req.body?.includeBody !== true) {
+      delete result.body;
+    }
+    res.json(result);
+  } catch (error) {
+    res.status(400).json({ error: error instanceof Error ? error.message : String(error) });
+  }
+});
+
+app.post('/x402/fetch/browser', async (req, res) => {
+  try {
+    const result = await fetchBrowser({
+      url: String(req.body?.url || ''),
+      timeoutMs: req.body?.timeoutMs,
+      userAgent: req.body?.userAgent,
+    });
+    if (req.body?.includeHtml !== true) {
+      delete result.html;
+    }
+    res.json(result);
+  } catch (error) {
+    res.status(400).json({ error: error instanceof Error ? error.message : String(error) });
+  }
+});
+
+app.post('/x402/extract/article', async (req, res) => {
+  try {
+    const result = await extractArticle({
+      url: String(req.body?.url || ''),
+      mode: req.body?.mode === 'browser' ? 'browser' : 'http',
+      timeoutMs: req.body?.timeoutMs,
+      userAgent: req.body?.userAgent,
+    });
+    if (req.body?.includeText === false) {
+      delete result.text;
+    }
+    res.json(result);
+  } catch (error) {
+    res.status(400).json({ error: error instanceof Error ? error.message : String(error) });
+  }
+});
+
+app.post('/x402/extract/links', async (req, res) => {
+  try {
+    const result = await extractLinksTool({
+      url: String(req.body?.url || ''),
+      timeoutMs: req.body?.timeoutMs,
+      userAgent: req.body?.userAgent,
+    });
+    res.json(result);
+  } catch (error) {
+    res.status(400).json({ error: error instanceof Error ? error.message : String(error) });
+  }
+});
 
 const workerHeartbeats = new Map<string, { ts: number; data: any }>();
 const HEARTBEAT_TTL_MS = Math.max(10000, Number(process.env.HEARTBEAT_TTL_MS ?? 30000));

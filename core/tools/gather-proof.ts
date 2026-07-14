@@ -302,7 +302,7 @@ async function main() {
             content_length: art.content_length,
             content: art.content,
             title_hash: createHash('sha256').update(art.title).digest('hex'),
-            content_hash: createHash('sha256').update(art.content).digest('hex')
+            content_hash: createHash('sha256').update(art.content || '').digest('hex')
           };
           appendFileSync(OUT_FILE, JSON.stringify(rec) + '\n');
           gatheredHere++;
@@ -337,7 +337,7 @@ async function main() {
   console.log(JSON.stringify(summary, null, 2));
 
   // best-effort browser cleanup
-  try { const { getBrowser } = await import('../plugins/browser.js'); const b = getBrowser(RUNTIME_CONFIG); try { await b.close(); } catch {} } catch {}
+  try { const { getBrowser } = await import('../plugins/browser.js'); const b = await getBrowser(RUNTIME_CONFIG); try { await b.close(); } catch {} } catch {}
   setTimeout(() => process.exit(0), 1500);
 }
 

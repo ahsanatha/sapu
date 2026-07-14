@@ -90,6 +90,39 @@ Requires Node 22+, pnpm 10+, Postgres 15+, RabbitMQ 3.13+.
 
 ## API
 
+### x402-ready stateless extraction
+
+Public endpoints that can be placed behind x402 middleware and priced per route:
+
+| Method | Path | Purpose | Suggested x402 price |
+|---|---|---|---:|
+| `GET` | `/x402/health` | Public product/route metadata | free |
+| `GET` | `/x402/cost/estimate` | Unit economics estimate | free |
+| `POST` | `/x402/classify-url` | CPU-only URL classification | `$0.001` |
+| `POST` | `/x402/fetch/http` | Bounded HTTP fetch | `$0.003` |
+| `POST` | `/x402/extract/links` | Extract links from fetched HTML | `$0.003` |
+| `POST` | `/x402/extract/article` | Extract title/text/links from page | `$0.005` |
+| `POST` | `/x402/fetch/browser` | Browser-rendered fetch | `$0.015+` |
+
+Example:
+
+```bash
+curl -s http://localhost:3000/x402/health
+
+curl -s http://localhost:3000/x402/classify-url \
+  -H 'content-type: application/json' \
+  -d '{"url":"https://example.com/news/article"}'
+
+curl -s http://localhost:3000/x402/extract/article \
+  -H 'content-type: application/json' \
+  -d '{"url":"https://example.com","includeText":true}'
+
+curl -s 'http://localhost:3000/x402/cost/estimate?endpoint=fetch-browser&seconds=10'
+```
+
+Operational guardrail: cheap HTTP extraction routes must not launch browser
+rendering. Browser rendering is exposed as a separate higher-priced route.
+
 ### Core
 
 | Method | Path | Purpose |
