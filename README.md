@@ -101,7 +101,8 @@ Public endpoints that can be placed behind x402 middleware and priced per route:
 | `POST` | `/x402/classify-url` | CPU-only URL classification | `$0.001` |
 | `POST` | `/x402/fetch/http` | Bounded HTTP fetch | `$0.003` |
 | `POST` | `/x402/extract/links` | Extract links from fetched HTML | `$0.003` |
-| `POST` | `/x402/extract/article` | Extract title/text/links from page | `$0.005` |
+| `POST` | `/x402/extract/article` | HTTP-only title/text/link extraction | `$0.005` |
+| `POST` | `/x402/extract/article/browser` | Browser-rendered article extraction | `$0.018` |
 | `POST` | `/x402/fetch/browser` | Browser-rendered fetch | `$0.015+` |
 
 Example:
@@ -117,11 +118,37 @@ curl -s http://localhost:3000/x402/extract/article \
   -H 'content-type: application/json' \
   -d '{"url":"https://example.com","includeText":true}'
 
+curl -s http://localhost:3000/x402/extract/article/browser \
+  -H 'content-type: application/json' \
+  -d '{"url":"https://example.com","includeText":true}'
+
 curl -s 'http://localhost:3000/x402/cost/estimate?endpoint=fetch-browser&seconds=10'
 ```
 
 Operational guardrail: cheap HTTP extraction routes must not launch browser
-rendering. Browser rendering is exposed as a separate higher-priced route.
+rendering. Browser rendering is exposed as separate higher-priced routes.
+
+### x402 payment gate
+
+The server includes x402 v2 Express middleware. It is disabled by default for
+local development and turns on only when both conditions are true:
+
+```bash
+X402_ENABLED=true
+X402_PAY_TO=0xYourSellerWalletAddress
+```
+
+Default seller config:
+
+```bash
+X402_NETWORK=eip155:84532
+X402_FACILITATOR_URL=https://x402.org/facilitator
+X402_RESOURCE_BASE_URL=https://sapu.rekursa.id
+```
+
+`GET /x402/health` and `GET /x402/cost/estimate` stay free. The paid routes
+return x402 v2 payment requirements and expect the `PAYMENT-SIGNATURE` header.
+Successful paid responses include the x402 `PAYMENT-RESPONSE` header.
 
 ### Core
 

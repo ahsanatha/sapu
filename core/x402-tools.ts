@@ -278,6 +278,11 @@ export function estimateCost(endpoint: string, params: any = {}): PriceEstimate 
       cost: 0.001,
       assumptions: ['single HTTP fetch + parser', 'browser fallback not included'],
     },
+    'extract-article-browser': {
+      price: 0.018,
+      cost: (seconds / 3600) * browserHourCost + 0.001,
+      assumptions: [`${seconds}s browser duration`, 'browser-rendered article extraction', `$${browserHourCost}/browser-hour`, 'storage/proxy excluded'],
+    },
     'fetch-browser': {
       price: 0.015,
       cost: (seconds / 3600) * browserHourCost + 0.0003,

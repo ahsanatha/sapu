@@ -24,6 +24,10 @@ import {
   fetchBrowser,
   fetchHttp,
 } from '../core/x402-tools.js';
+import {
+  createX402PaymentMiddleware,
+  getX402PaymentSummary,
+} from '../core/x402-payment.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -119,19 +123,40 @@ app.use((req: any, res: any, next: any) => {
 });
 app.use('/admin', express.static(ADMIN_DIR));
 
+app.post('/x402/extract/article', (req, res, next) => {
+  if (req.body?.mode === 'browser') {
+    return res.status(400).json({
+      error: 'browser_mode_requires_dedicated_route',
+      message: 'Use POST /x402/extract/article/browser for browser-rendered article extraction.',
+      route: 'POST /x402/extract/article/browser',
+    });
+  }
+  return next();
+});
+
+const x402PaymentMiddleware = createX402PaymentMiddleware();
+if (x402PaymentMiddleware) {
+  app.use(x402PaymentMiddleware);
+  console.log('x402 payment middleware enabled', getX402PaymentSummary());
+} else {
+  console.log('x402 payment middleware disabled; set X402_ENABLED=true and X402_PAY_TO to charge paid routes');
+}
+
 // Public x402-ready stateless extraction endpoints.
-// These intentionally do not use admin auth; production x402 middleware should
-// sit in front of this router and price each route separately.
+// Health and cost estimate stay free. Paid routes are protected by x402
+// middleware when X402_ENABLED=true.
 app.get('/x402/health', (_req, res) => {
   res.json({
     ok: true,
     service: 'Sapu Extract API',
     version: '0.1.0',
+    payment: getX402PaymentSummary(),
     endpoints: [
       'POST /x402/classify-url',
       'POST /x402/fetch/http',
       'POST /x402/fetch/browser',
       'POST /x402/extract/article',
+      'POST /x402/extract/article/browser',
       'POST /x402/extract/links',
       'GET /x402/cost/estimate',
     ],
@@ -193,7 +218,24 @@ app.post('/x402/extract/article', async (req, res) => {
   try {
     const result = await extractArticle({
       url: String(req.body?.url || ''),
-      mode: req.body?.mode === 'browser' ? 'browser' : 'http',
+      mode: 'http',
+      timeoutMs: req.body?.timeoutMs,
+      userAgent: req.body?.userAgent,
+    });
+    if (req.body?.includeText === false) {
+      delete result.text;
+    }
+    res.json(result);
+  } catch (error) {
+    res.status(400).json({ error: error instanceof Error ? error.message : String(error) });
+  }
+});
+
+app.post('/x402/extract/article/browser', async (req, res) => {
+  try {
+    const result = await extractArticle({
+      url: String(req.body?.url || ''),
+      mode: 'browser',
       timeoutMs: req.body?.timeoutMs,
       userAgent: req.body?.userAgent,
     });
